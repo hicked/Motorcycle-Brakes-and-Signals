@@ -6,7 +6,7 @@
 #include "gyro.h"
 #include "button.h"
 
-#define LED_DATA_PIN 5 // CHANGE TO 4 IF DATA PIN NOT WORKING
+#define LED_DATA_PIN 4 // CHANGE TO 5 IF DATA PIN NOT WORKING
 
 #define NUM_LEDS 66
 #define LED_TYPE WS2815
