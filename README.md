@@ -34,13 +34,9 @@ I did my best to make this project as versatile and scalable as possible. Theref
 To do this, after downloading the program files, simply open all the files ending in `.h` and change the values of the `#define`'s to suit your liking.
 ![Screenshot 2025-01-05 165439](https://github.com/user-attachments/assets/3c05c40d-e91a-444e-a3c6-27e4b3e6d679)
 
-## Other Media
-### Here are a few demos
+## Demos
+https://github.com/user-attachments/assets/aa2e7507-03d2-4963-8b66-d6189a29fe5b
 > Gyroscope filtering algorithm, to remove any noise and bumps that would skew the readings of the gyroscope, and therefore light up the LED strip incorectly
 
-https://github.com/user-attachments/assets/aa2e7507-03d2-4963-8b66-d6189a29fe5b
-
-> Demo of signal/hazard lights
-
 https://github.com/user-attachments/assets/a8786f55-660a-4991-8c82-4a94363032eb
-
+> Demo of signal/hazard lights
