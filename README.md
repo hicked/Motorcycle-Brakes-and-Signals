@@ -1,12 +1,12 @@
 # Motorcycle-Signals
 As we know, rear-ends, while not the most fatal, are considered to be the most common type of collision. For motorcyclist, unfortunetly, this puts them in an impossible situation, that sometimes leads to their deaths.
-For this reason, I created this open-source Arduino project, focused on increasing road safety for motorcyclists by making them more visible from behind, as well as better communicate their intentions on roadways.
+For this reason, I created this open-source Arduino project, focused on increasing road safety for motorcyclists by making them more visible, as well as better communicate their intentions on roadways by displaying brake lights while engine braking, regardless of brake input.
 
 ## The Problems
-Motorcyclists know that there are two fundamental problems with their brake lights:
-1. The first is that they are far too small, making it hard to judge their distance, sometimes going completely unnoticed. This is one of the problems that this projects aims to fix, by incorporating a center flashing element, which is sure to get drivers attention.
-2. The second, and arguably more dangerous problem, is that the rear light is activated solely based on brake input. This means that if the motorcyclist chooses to downshift instead of using their brakes, the brake lights will never turn on. This varies from bike to bike, but regardless, it would be important to communicate this information to the drivers behind us, as all they care about is whether were slowing down or not, regardless of brake activation.
-These two effects are hightened even more when we consider the weight of motorcycles, sometimes cutting their braking distances by half in ideal circumstances. 
+Motorcyclists know that there are three fundamental problems with their brake lights:
+1. The first is that they are far too small, making it hard to judge their distance and sometimes going by **completely unnoticed** by drivers. This is one of the problems that this projects aims to fix, by incorporating flashing during **initiation**, and **emergency** braking, which is sure to get drivers attention.
+2. The second, and arguably more dangerous problem, is that the rear light is activated **solely based on brake input**. This means that if the motorcyclist chooses to **downshift** or **engine brake** instead of using their brakes, the brake lights will **never turn on**. The rate of deceleration from engine braking varies from bike to bike, but regardless, it would be important to communicate this information to the drivers behind us, as all they care about is **whether were slowing down or not, regardless of brake activation**. This will be achieved using a gyroscope, with filtering algorithms to account for gravity, hills, and bumps in the road. 
+3. The third and final problem is that because of the light nature of motorcycles, they tend to have very short braking distances, which can often catch drivers off guard, as they do not expect them to be able to slow down so rapidly. As stated previously, these lights will aim to be more visible for drivers, in order to get their attention when braking, and avoid any unwanted surprises.
 
 ## The Solution
 Thus, this project will have a few set goals:
@@ -23,7 +23,7 @@ Thus, this project will have a few set goals:
 >
 > *Additionally, at full brightness, the WS2815s and Buck may run hot: Each LED can draw 13mA, at 12V thats 0.16W per LED. With 66 LEDs, thats 11W.*
 >
-> *Note that some LED strips only have one data pin, while some like the WS2815s have a backup one. D4 is the data pin by default, but it can be changed within the `main` headers
+> *Note that some LED strips only have one data pin, while some like the WS2815s have a backup one. D4 is the data pin by default, but it can be changed within the `main` header*
 > 
 > *For this reason, try to keep the current draw below 0.75A. If the LEDs or Buck are getting hot, simply lower the brightness of the LEDs.*
 
