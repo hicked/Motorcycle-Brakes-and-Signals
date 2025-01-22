@@ -1,5 +1,5 @@
 # Motorcycle-Signals
-As we know, rear-ends, while not the most fatal, are considered to be the most common type of collision. For motorcyclist, unfortunetly, this puts them in an impossible situation, that sometimes leads to their deaths.
+As we know, rear-ends, while not the most fatal, are considered to be the most common type of collision. For motorcyclist, unfortunately, this puts them in an impossible situation, that sometimes leads to their deaths.
 For this reason, I created this open-source Arduino project, focused on increasing road safety for motorcyclists by making them more visible, as well as better communicate their intentions on roadways by displaying brake lights while engine braking, regardless of brake input.
 
 ## The Problems
