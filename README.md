@@ -18,18 +18,20 @@ Thus, this project will have a few set goals:
 7. Incorporate sequential turn signals.
 
 ## Circuit Diagram
-![Screenshot 2025-01-04 022818](https://github.com/user-attachments/assets/97b3e572-dd8e-40e1-9ff4-1bbe8d284469)
-> *Two DC-DC Buck converters are used, one to drive the 12V LEDs and one to drive the 5V Arduino Nano. However, to be safe, the Buck converters are set to 11V and 4V respectively.*
+![Screenshot 2025-01-22 014738](https://github.com/user-attachments/assets/1307465a-f116-4e59-b317-fbbc9e9f7539)
+> *Two DC-DC Buck converters are used, one to drive the 12V LEDs and one to drive the 5V Arduino Nano. However, to be safe, the Buck converters are set to 11V and 4.5V respectively.*
 >
 > *Additionally, at full brightness, the WS2815s and Buck may run hot: Each LED can draw 13mA, at 12V thats 0.16W per LED. With 66 LEDs, thats 11W.*
+>
+> *Note that some LED strips only have one data pin, while some like the WS2815s have a backup one. D4 is the data pin by default, but it can be changed within the `main` headers
 > 
 > *For this reason, try to keep the current draw below 0.75A. If the LEDs or Buck are getting hot, simply lower the brightness of the LEDs.*
 
-![Screenshot 2025-01-05 162910](https://github.com/user-attachments/assets/b7d5cf73-f7a6-4c75-a5ee-a5674e204e44)
+![Screenshot 2025-01-22 014846](https://github.com/user-attachments/assets/78e6ea16-7ef2-4a84-8516-3350251b6d51)
 
 ## Customization and Header Files
 I did my best to make this project as versatile and scalable as possible. Therefore, the LEDs should be able to be tailored and customized easily, by simply changing the parameters in the header files.
-To do this, after downloading the program files, simply open all the files ending in `.h` and change the values of the `#define`'s to whatever your liking.
+To do this, after downloading the program files, simply open all the files ending in `.h` and change the values of the `#define`'s to suit your liking.
 ![Screenshot 2025-01-05 165439](https://github.com/user-attachments/assets/3c05c40d-e91a-444e-a3c6-27e4b3e6d679)
 
 ## Other Media
