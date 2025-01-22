@@ -8,7 +8,7 @@
 #define MIN_GYRO_ACCELERATING 1000 // buffer area where gyro wont do anything
 #define MAX_GYRO_ACCELERATING 16000 // maximum value of gyro when accelerating
 
-#define EXPECTED_ACC_MAGNITUDE 17000.0 // expected value of acceleration when stationary (gravity only)
+#define EXPECTED_ACC_MAGNITUDE 17000.0 // expected value of acceleration when stationary (gravity only). Defaults to this if calibration fails
 #define CALIBRATION_SAMPLE_SIZE 50 // sample size for calibration phase
 #define CALIBRATION_ACC_DELTA 500 // ensures that the acc found during calibration is within this of EXPECTED_ACC_MAGNITUDE
 
@@ -18,18 +18,17 @@
 // First, it will check the raw value of the acceleration. If this value is too dissimilar from the previous value,
 // the data will be disregarded. It automatically detect errors, overriding bumps if it detects continuous bumps for x amount of time.
 // side note, there is a bug where it gets in an infinite loop if multiple overrides stack. For this reason there is a minimum time between overrides
-#define FILTER_DELTA false
+#define FILTER_DELTA true
 
-#define BUMP_THRESHOLD 1000 // if the acceleration changes by this much, its probably a bump
-#define SAMPLE_SIZE_BUMPS 20 // if there are this many bumps in a row that are within threshold of each other,
-// its not a bump, so override
+#define BUMP_THRESHOLD 1000 // if the acceleration delta (changes) by this much within a tick, its probably a bump
+#define SAMPLE_SIZE_BUMPS 20 // if there are this many bumps in a row that are within BUMP_THRESHHOLD of each other, its not a bump, so override
 
-#define BUMP_OVERRIDE_TIME 5000 // force an update if bumps are detected for this many millis
-#define MIN_TIME_BETWEEN_OVERRIDES 6000
+#define BUMP_OVERRIDE_TIME 3000 // force an update if bumps are detected for this many millis
+#define MIN_TIME_BETWEEN_OVERRIDES 6000 // wont override consistently. Should be larger than BUMP_OVERRIDE_TIME
 
 
 // Secondly, the program takes a sample size of gyro values
-// It will take the average of n data, and calculate the average
+// It will take the average of AVG_SAMPLE_SIZE data points, and calculate the average
 #define FILTER_AVG true
 #define AVG_SAMPLE_SIZE 5
 
