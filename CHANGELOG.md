@@ -10,14 +10,21 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
-## [v.0.4.1-alpha] - 2024-01-18
+## [v.1.0.0] - 2024-01-22
+**Author:** Antoine
+-   v1.0.0, First release
+-   Refactoring
+-   Gyro filter effectiveness to be determined
+> Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
+
+## [v.0.4.1-beta] - 2024-01-18
 **Author:** Antoine
 -   Renamed versions, v1.0.0 should be out soon
 -   Refactoring
 -   Made general functions for LED patterns that can be adjusted manually
     -   May need some refactoring/polishing for `marquee`
 -   Fixed dynamic brake mode not working
--   Gyro filter affectiveness to be determined
+-   Gyro filter effectiveness to be determined
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These will have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 > Also note that, for testing purposes, gyroscope is taking in raw input (gravity is not disregarded)
 
@@ -37,7 +44,7 @@ Date is in YYYY/MM/DD format.
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These will have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 > Also note that, for testing purposes, gyroscope is taking in raw input (gravity is not disregarded)
 
-## [v.0.3.2-alpha] - 2024-01-05
+## [v.0.3.2-beta] - 2024-01-05
 **Author:** Antoine
 -   Finalized Signals
 -   Added flashlight

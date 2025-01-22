@@ -66,12 +66,12 @@ void Gyro::update() {
     this->prevAcc = this->smoothedAcc;
 
     // Calculate the corrected acceleration
-    // this->correctedAcc = (sqrt(this->measuredAccX * this->measuredAccX +
-    //                         this->measuredAccY * this->measuredAccY +
-    //                         this->measuredAccZ * this->measuredAccZ) 
-    //                         - this->idleAcc)
-    //                         * (this->measuredAccY >= 0 ? 1 : -1);
-    this->correctedAcc = this->measuredAccY;
+    this->correctedAcc = (sqrt(this->measuredAccX * this->measuredAccX +
+                            this->measuredAccY * this->measuredAccY +
+                            this->measuredAccZ * this->measuredAccZ) 
+                            - this->idleAcc)
+                            * (this->measuredAccY >= 0 ? 1 : -1);
+    //this->correctedAcc = this->measuredAccY;
 
     // Check for sudden bumps
     if (abs(this->prevAcc - this->correctedAcc) > BUMP_THRESHOLD && FILTER_DELTA) {
@@ -146,7 +146,7 @@ void Gyro::update() {
         this->sumSamples = 0.0;
 
         lastUpdateTime = millis();
-        Serial.print("Acc: ");
-        Serial.println(this->smoothedAcc);
+        // Serial.print("Acc: ");
+        // Serial.println(this->smoothedAcc);
     }
 }
