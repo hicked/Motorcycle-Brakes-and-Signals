@@ -40,7 +40,7 @@ void setup() {
     button = new Button();
     signals = new Signals(leds, button, NUM_LEDS);
     brake = new Brake(signals, leds, gyro, button, NUM_LEDS);
-    Serial.println("Setup complete");
+    Serial.println("Setup and Calibration Complete");
 }
 
 

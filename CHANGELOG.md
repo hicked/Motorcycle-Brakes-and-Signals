@@ -10,6 +10,11 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
+Fixed bug where calibration acc wouldnt be properly calibrated
+fixed bug where would infinitely calibrate when couldnt read from mpu
+changed headers for more realistic acc/braking
+
+
 ## [v.1.0.0] - 2024-01-22
 **Author:** Antoine
 -   v1.0.0, First release

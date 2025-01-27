@@ -2,15 +2,15 @@
 #include <Wire.h>
 
 // divide all these values by 17000 to get the amount in g force
-#define MIN_GYRO_BREAKING 500 // Buffer area where gyro wont do anything
-#define MAX_GYRO_BREAKING 16000 // Max value of gyro when braking. anything more will be emergency braking
+#define MIN_GYRO_BREAKING 400 // Buffer area where gyro wont do anything
+#define MAX_GYRO_BREAKING 4000 // Max value of gyro when braking. anything more will be emergency braking
 
 #define MIN_GYRO_ACCELERATING 1000 // buffer area where gyro wont do anything
-#define MAX_GYRO_ACCELERATING 16000 // maximum value of gyro when accelerating
+#define MAX_GYRO_ACCELERATING 4000 // maximum value of gyro when accelerating
 
-#define EXPECTED_ACC_MAGNITUDE 17000.0 // expected value of acceleration when stationary (gravity only). Defaults to this if calibration fails
-#define CALIBRATION_SAMPLE_SIZE 50 // sample size for calibration phase
-#define CALIBRATION_ACC_DELTA 500 // ensures that the acc found during calibration is within this of EXPECTED_ACC_MAGNITUDE
+#define EXPECTED_ACC_MAGNITUDE 16800.0 // expected value of acceleration when stationary (gravity only). Defaults to this if calibration fails
+#define CALIBRATION_SAMPLE_SIZE 500 // sample size for calibration phase
+#define CALIBRATION_ACC_DELTA 1000 // ensures that the acc found during calibration is within this of EXPECTED_ACC_MAGNITUDE
 
 
 // Filtering and smoothing

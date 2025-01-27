@@ -18,7 +18,17 @@ Gyro::Gyro() {
     float sum = 0.0;
     int n = 0;
     delay(3000);
+    unsigned long lastTime = millis();
+    unsigned int failedAttempts = 0;
     while (n < CALIBRATION_SAMPLE_SIZE) {
+        unsigned long currentTime = millis();
+        if (currentTime - lastTime > 100) {
+            Serial.print("Calibrating Gyroscope: ");
+            Serial.print(n+1);
+            Serial.print("/");
+            Serial.println(CALIBRATION_SAMPLE_SIZE);
+            lastTime = currentTime;
+        }
         Wire.beginTransmission(MPU);
         Wire.write(0x3B);  
         Wire.endTransmission(false);
@@ -36,14 +46,27 @@ Gyro::Gyro() {
             sum += this->correctedAcc;
 
         } else {
-            Serial.println("Failed to read from MPU");
+            Serial.print("Failed Attempt to read from MPU: ");
+            Serial.print(failedAttempts+1);
+            Serial.print("/");
+            Serial.println(CALIBRATION_SAMPLE_SIZE);
+            failedAttempts++;
+            if (failedAttempts > CALIBRATION_SAMPLE_SIZE) {
+                break;
+            }
             continue;
         }
         delay(5);
     }
-    this->idleAcc = sum/(n+1);
+    Serial.println("Calibratin Gyroscope: COMPLETED");
+
+    this->idleAcc = sum/n;
+    Serial.print("IDLE ACC: ");
+    Serial.println(this->idleAcc);
     if (abs(this->idleAcc - EXPECTED_ACC_MAGNITUDE) > CALIBRATION_ACC_DELTA) {
         this->idleAcc = EXPECTED_ACC_MAGNITUDE;
+        Serial.print("OVERRIDING ACC TO: ");
+        Serial.println(this->idleAcc);
     } 
     
     this->lastUpdateTime = millis(); // Initialize the last update time
@@ -146,7 +169,7 @@ void Gyro::update() {
         this->sumSamples = 0.0;
 
         lastUpdateTime = millis();
-        // Serial.print("Acc: ");
-        // Serial.println(this->smoothedAcc);
+        Serial.print("Acc: ");
+        Serial.println(this->smoothedAcc);
     }
 }
