@@ -88,57 +88,43 @@ void Gyro::update() {
     }
     this->prevAcc = this->smoothedAcc;
 
+    // Serial.print("X: ");
+    // Serial.print(this->measuredAccX);
+    // Serial.print(" Y: ");
+    // Serial.print(this->measuredAccY);
+    // Serial.print(" Z: ");
+    // Serial.println(this->measuredAccZ);
+    
+
     // Calculate the corrected acceleration
-    this->correctedAcc = (sqrt(this->measuredAccX * this->measuredAccX +
-                            this->measuredAccY * this->measuredAccY +
-                            this->measuredAccZ * this->measuredAccZ) 
-                            - this->idleAcc)
-                            * (this->measuredAccY >= 0 ? 1 : -1);
-    //this->correctedAcc = this->measuredAccY;
+    // Compute roll (leaning) angle
+    float ratioRoll = this->measuredAccX / this->idleAcc;
+    ratioRoll = constrain(ratioRoll, -1.0, 1.0);
+    float phi = sqrt(asin(ratioRoll)*asin(ratioRoll));  // Tilt due to leaning
 
-    // Check for sudden bumps
-    if (abs(this->prevAcc - this->correctedAcc) > BUMP_THRESHOLD && FILTER_DELTA) {
-        unsigned long currentTime = millis();
-        this->numBumps++;
+    // Compute pitch (hills) angle
+    float ratioPitch = this->measuredAccZ / this->idleAcc;
+    ratioPitch = constrain(ratioPitch, -1.0, 1.0);
+    float theta = sqrt((acos(ratioPitch) - phi)*(acos(ratioPitch) - phi));  // Tilt due to hills
 
-        // Calculate the corrected acceleration 
-        if (this->correctedAcc < this->minBump) { 
-            this->minBump = this->correctedAcc; 
-        } 
-        if (this->correctedAcc > this->maxBump) { 
-            this->maxBump = this->correctedAcc; 
-        }
+    // Compute gravity effect correction for hills and lean
+    float correctionPitch = this->idleAcc * sin(theta);  // Gravity effect from hills
+    float correctionRoll = this->idleAcc * sin(phi);    // Gravity effect from leaning
 
-        // Overrides if bumps are within a delta (therefore not a bump)
-        if (this->numBumps > SAMPLE_SIZE_BUMPS) {
-            if (this->maxBump - this->minBump < BUMP_THRESHOLD) {
-                Serial.println("Bumps seem consitent: Overriding");
-                this->smoothedAcc = this->correctedAcc;
-                this->prevAcc = this->correctedAcc;
-            }
-            this->minBump = 100000;
-            this->maxBump = -100000;
-            this->numBumps = 0;
-        }
+    // Corrected acceleration
+    this->correctedAcc = this->measuredAccY 
+                        + (this->measuredAccY < 0 ? correctionPitch : -correctionPitch);
 
-        // Forcing update if too much time has passed
-        else if (currentTime - this->lastUpdateTime > BUMP_OVERRIDE_TIME && currentTime - this->lastForceUpdate > MIN_TIME_BETWEEN_OVERRIDES) {
-            Serial.println("Too much time passed since last update: Overriding."); // forcing changes
-            // Force an update with the current corrected value
-            this->smoothedAcc = this->correctedAcc;
-            this->prevAcc = this->correctedAcc;
-            this->lastUpdateTime = currentTime; // Reset the last update time
-            this->lastForceUpdate = currentTime;
-            this->minBump = 100000;
-            this->maxBump = -100000;
-            this->numBumps = 0;
-        } else {
-            // Skip the update since its a bump
-            Serial.print("BUMP DETECTED: ");
-            Serial.println(this->correctedAcc);
-            return;
-        }
-    }
+    // Debugging
+    // Serial.print("Pitch (theta, deg): ");
+    // Serial.println(theta * 180.0 / PI);
+
+    // Serial.print("Roll (phi, deg): ");
+    // Serial.println(phi * 180.0 / PI);
+
+    // Serial.print("Corrected AccY: ");
+    // Serial.println(this->correctedAcc);
+
 
     if (!FILTER_AVG) {
         this->numSamples = AVG_SAMPLE_SIZE;
