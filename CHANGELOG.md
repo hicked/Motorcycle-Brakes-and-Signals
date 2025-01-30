@@ -14,6 +14,10 @@ Fixed bug where calibration acc wouldnt be properly calibrated
 fixed bug where would infinitely calibrate when couldnt read from mpu
 changed headers for more realistic acc/braking
 
+## [v.2.0.0] - 2024-01-29
+**Author:** Antoine
+-   Gyro filtering was deemed to be ineffective, resorting to Y-Axis acceleration with vector algebra to determine when lean/hills occur (and disregard them).
+> Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
 ## [v.1.0.0] - 2024-01-22
 **Author:** Antoine

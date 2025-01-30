@@ -105,15 +105,13 @@ void Gyro::update() {
     // Compute pitch (hills) angle
     float ratioPitch = this->measuredAccZ / this->idleAcc;
     ratioPitch = constrain(ratioPitch, -1.0, 1.0);
-    float theta = sqrt((acos(ratioPitch) - phi)*(acos(ratioPitch) - phi));  // Tilt due to hills
+    float theta = acos(ratioPitch)-phi;  // Tilt due to hills and lean
 
     // Compute gravity effect correction for hills and lean
-    float correctionPitch = this->idleAcc * sin(theta);  // Gravity effect from hills
-    float correctionRoll = this->idleAcc * sin(phi);    // Gravity effect from leaning
-
+    float correctionPitch = this->idleAcc * sin(theta) * (this->measuredAccY < 0 ? 1 : -1);  // Gravity effect from hills and leaning
+    
     // Corrected acceleration
-    this->correctedAcc = this->measuredAccY 
-                        + (this->measuredAccY < 0 ? correctionPitch : -correctionPitch);
+    this->correctedAcc = this->measuredAccY + correctionPitch;
 
     // Debugging
     // Serial.print("Pitch (theta, deg): ");
