@@ -37,7 +37,7 @@ changed headers for more realistic acc/braking
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These will have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 > Also note that, for testing purposes, gyroscope is taking in raw input (gravity is not disregarded)
 
-## [v.0.4.0-alpha] - 2024-01-16
+## [v.0.4.0-beta] - 2024-01-16
 **Author:** Antoine
 -   Refactoring
 -   Added switch cases for button modes
