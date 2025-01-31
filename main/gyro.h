@@ -50,6 +50,10 @@ private:
     float measuredAccY; // forward+ backwards- (ASSUMING BOARD IS FACING UP)
     float measuredAccZ; // up and down
 
+    float measuredGyroX;
+    float measuredGyroY;
+    float measuredGyroZ;
+
     float minBump = 100000.0;
     float maxBump = -100000.0;
     int numBumps = 0;

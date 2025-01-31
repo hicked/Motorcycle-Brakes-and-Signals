@@ -76,12 +76,21 @@ void Gyro::update() {
     Wire.beginTransmission(MPU);
     Wire.write(0x3B);  
     Wire.endTransmission(false);
-    Wire.requestFrom(MPU, 6, true);  // 6 pieces of data cause we don't care about rotational
+    Wire.requestFrom(MPU, 14, true);  // 6 pieces of data cause we don't care about rotational
+    float x;
+    float y;
+    float z;
 
-    if (Wire.available() == 6) {
+    if (Wire.available() == 14) {
         this->measuredAccX = Wire.read() << 8 | Wire.read();    
         this->measuredAccY = Wire.read() << 8 | Wire.read();  
         this->measuredAccZ = Wire.read() << 8 | Wire.read();
+
+        int16_t temp = Wire.read() << 8 | Wire.read();
+
+        this->measuredGyroX = Wire.read() << 8 | Wire.read();
+        this->measuredGyroY = Wire.read() << 8 | Wire.read();
+        this->measuredGyroZ = Wire.read() << 8 | Wire.read();
     } else {
         Serial.println("Failed to read from MPU");
         return;
@@ -97,31 +106,24 @@ void Gyro::update() {
     
 
     // Calculate the corrected acceleration
-    // Compute roll (leaning) angle
-    float ratioRoll = this->measuredAccX / this->idleAcc;
-    ratioRoll = constrain(ratioRoll, -1.0, 1.0);
-    float phi = sqrt(asin(ratioRoll)*asin(ratioRoll));  // Tilt due to leaning
+    float accX = this->measuredAccX / this->idleAcc;
+    float accY = this->measuredAccY / this->idleAcc;
+    float accZ = this->measuredAccZ / this->idleAcc;
 
-    // Compute pitch (hills) angle
-    float ratioPitch = this->measuredAccZ / this->idleAcc;
-    ratioPitch = constrain(ratioPitch, -1.0, 1.0);
-    float theta = acos(ratioPitch)-phi;  // Tilt due to hills and lean
+    float theta = atan2(accY, accZ);  // pitch angle (hill)
+    //float phi = atan2(-accX, sqrt(accY * accY + accZ * accZ));  // roll angle (lean)
 
     // Compute gravity effect correction for hills and lean
-    float correctionPitch = this->idleAcc * sin(theta) * (this->measuredAccY < 0 ? 1 : -1);  // Gravity effect from hills and leaning
-    
-    // Corrected acceleration
-    this->correctedAcc = this->measuredAccY + correctionPitch;
+    float correction = this->idleAcc * sin(theta);
+    //float correctionRoll = this->idleAcc * sin(phi);
+    this->correctedAcc = this->measuredAccY - correction; //- correctionRoll;
 
     // Debugging
-    // Serial.print("Pitch (theta, deg): ");
-    // Serial.println(theta * 180.0 / PI);
+    Serial.print("Angle (theta, deg): ");
+    Serial.println(theta * 180.0 / PI);
 
-    // Serial.print("Roll (phi, deg): ");
-    // Serial.println(phi * 180.0 / PI);
-
-    // Serial.print("Corrected AccY: ");
-    // Serial.println(this->correctedAcc);
+    Serial.print("Corrected AccY: ");
+    Serial.println(this->correctedAcc);
 
 
     if (!FILTER_AVG) {
@@ -153,7 +155,7 @@ void Gyro::update() {
         this->sumSamples = 0.0;
 
         lastUpdateTime = millis();
-        Serial.print("Acc: ");
-        Serial.println(this->smoothedAcc);
+        // Serial.print("Acc: ");
+        // Serial.println(this->smoothedAcc);
     }
 }
