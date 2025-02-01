@@ -72,21 +72,19 @@ Gyro::Gyro() {
     this->lastUpdateTime = millis(); // Initialize the last update time
 }
 
+
 void Gyro::update() {
     Wire.beginTransmission(MPU);
     Wire.write(0x3B);  
     Wire.endTransmission(false);
     Wire.requestFrom(MPU, 14, true);  // 6 pieces of data cause we don't care about rotational
-    float x;
-    float y;
-    float z;
 
     if (Wire.available() == 14) {
         this->measuredAccX = Wire.read() << 8 | Wire.read();    
         this->measuredAccY = Wire.read() << 8 | Wire.read();  
         this->measuredAccZ = Wire.read() << 8 | Wire.read();
 
-        int16_t temp = Wire.read() << 8 | Wire.read();
+        this->temp = Wire.read() << 8 | Wire.read();
 
         this->measuredGyroX = Wire.read() << 8 | Wire.read();
         this->measuredGyroY = Wire.read() << 8 | Wire.read();
@@ -95,7 +93,43 @@ void Gyro::update() {
         Serial.println("Failed to read from MPU");
         return;
     }
-    this->prevAcc = this->smoothedAcc;
+    
+    if (FILTER_DELTA) {
+        float delta = this->measuredAccZ - this->prevMeasuredAccZ
+        if (sqrt(delta*delta) > BUMP_THRESHOLD && lastUpdateTime - millis() < BUMP_OVERRIDE) {
+            this->measuredAccZ = this->prevMeasuredAccZ; // disregard the bump, use the previous value instead
+        }
+        else {
+            lastUpdateTime = millis();
+        }
+    }
+
+    // Calculate the corrected acceleration
+    float accX = this->measuredAccX / this->idleAcc
+    float accY = this->measuredAccY / this->idleAcc;
+    float accZ = this->measuredAccZ / this->idleAcc;
+
+    float theta = atan2(accY, accZ);  // Angle relative to ground
+
+    // Compute gravity effect correction for hills and lean
+    float correction = this->idleAcc * sin(theta);
+    this->correctedAcc = this->measuredAccY - correction;
+
+
+    if (FILTER_SMOOTHING) {
+        this->smoothedAcc = this->smoothedAcc * (1 - SMOOTHING_FACTOR) + this->correctedAcc * SMOOTHING_FACTOR;
+    }
+    else {
+        this->smoothedAcc = this->correctedAcc;
+    }
+
+    this->prevMeasuredAccZ = this->measuredAccZ;
+
+    // Serial.print("Acc: ");
+    // Serial.println(this->smoothedAcc);
+
+    // Serial.print("Temperature: ");
+    // Serial.println(temp/340.0 + 36.53);
 
     // Serial.print("X: ");
     // Serial.print(this->measuredAccX);
@@ -103,59 +137,11 @@ void Gyro::update() {
     // Serial.print(this->measuredAccY);
     // Serial.print(" Z: ");
     // Serial.println(this->measuredAccZ);
-    
-
-    // Calculate the corrected acceleration
-    float accX = this->measuredAccX / this->idleAcc;
-    float accY = this->measuredAccY / this->idleAcc;
-    float accZ = this->measuredAccZ / this->idleAcc;
-
-    float theta = atan2(accY, accZ);  // pitch angle (hill)
-    //float phi = atan2(-accX, sqrt(accY * accY + accZ * accZ));  // roll angle (lean)
-
-    // Compute gravity effect correction for hills and lean
-    float correction = this->idleAcc * sin(theta);
-    //float correctionRoll = this->idleAcc * sin(phi);
-    this->correctedAcc = this->measuredAccY - correction; //- correctionRoll;
 
     // Debugging
-    Serial.print("Angle (theta, deg): ");
-    Serial.println(theta * 180.0 / PI);
+    // Serial.print("Angle (theta, deg): ");
+    // Serial.println(theta * 180.0 / PI);
 
-    Serial.print("Corrected AccY: ");
-    Serial.println(this->correctedAcc);
-
-
-    if (!FILTER_AVG) {
-        this->numSamples = AVG_SAMPLE_SIZE;
-        this->sumSamples = this->correctedAcc;
-    }
-    if (this->numSamples < AVG_SAMPLE_SIZE) {
-        this->sumSamples += this->correctedAcc;
-        this->numSamples++;
-        // Serial.print("Raw: ");
-        // Serial.println(this->correctedAcc);
-    }
-    else {
-        // Calculate the average acceleration
-        this->avgAcc = this->sumSamples / AVG_SAMPLE_SIZE;
-        // Serial.print("Avg: ");
-        // Serial.println(this->avgAcc);
-
-        if (FILTER_SMOOTHING) {
-            this->smoothedAcc = this->smoothedAcc * (1 - SMOOTHING_FACTOR) + this->correctedAcc * SMOOTHING_FACTOR;
-        }
-        else {
-            this->smoothedAcc = this->avgAcc;
-        }
-
-        // Update previous corrected acceleration and timestamp and reset the sample data
-        this->numSamples = 0;
-        this->avgAcc = 0.0;
-        this->sumSamples = 0.0;
-
-        lastUpdateTime = millis();
-        // Serial.print("Acc: ");
-        // Serial.println(this->smoothedAcc);
-    }
+    // Serial.print("Corrected AccY: ");
+    // Serial.println(this->correctedAcc);
 }

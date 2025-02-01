@@ -19,14 +19,9 @@
 // First, it will check the raw value of the acceleration. If this value is too dissimilar from the previous value,
 // the data will be disregarded. It automatically detect errors, overriding bumps if it detects continuous bumps for x amount of time.
 // side note, there is a bug where it gets in an infinite loop if multiple overrides stack. For this reason there is a minimum time between overrides
-#define FILTER_DELTA false
-
+#define FILTER_DELTA true
 #define BUMP_THRESHOLD 1000 // if the acceleration delta (changes) by this much within a tick, its probably a bump
-#define SAMPLE_SIZE_BUMPS 20 // if there are this many bumps in a row that are within BUMP_THRESHHOLD of each other, its not a bump, so override
-
-#define BUMP_OVERRIDE_TIME 3000 // force an update if bumps are detected for this many millis
-#define MIN_TIME_BETWEEN_OVERRIDES 6000 // wont override consistently. Should be larger than BUMP_OVERRIDE_TIME
-
+#define BUMP_OVERRIDE 1000 // Will overide the bump if it happens for this long
 
 // Secondly, the program takes a sample size of gyro values
 // It will take the average of AVG_SAMPLE_SIZE data points, and calculate the average
@@ -43,7 +38,6 @@ private:
     const int MPU = 0x68; // MPU6050 I2C address
 
     unsigned long lastUpdateTime = 0;
-    unsigned long lastForceUpdate = 0;
     float idleAcc = 0.0;
 
     float measuredAccX; // left and right
@@ -54,18 +48,12 @@ private:
     float measuredGyroY;
     float measuredGyroZ;
 
-    float minBump = 100000.0;
-    float maxBump = -100000.0;
-    int numBumps = 0;
-
-    int numSamples = 0;
-    float sumSamples = 0.0;
-    float avgAcc = 0.0;
+    float temp;
 
     float correctedAcc = 0.0; // disregarding idle gravity
 
 public:
-    float prevAcc = 0.0; // previous corrected acceleration, used to filter out bumps
+    float prevMeasuredAccZ = 0.0; // previous corrected acceleration, used to filter out bumps
     float smoothedAcc = 0.0; // smoothed out acceleration for dealing with bumps and irregularities, signed
     Gyro();
     void update();
