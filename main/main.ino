@@ -36,8 +36,8 @@ void setup() {
     pinMode(BUTTON_PIN, INPUT_PULLUP);
 
     // Initialize objects
-    gyro = new Gyro();
     button = new Button();
+    gyro = new Gyro(button);
     signals = new Signals(leds, button, NUM_LEDS);
     brake = new Brake(signals, leds, gyro, button, NUM_LEDS);
     Serial.println("Setup and Calibration Complete");

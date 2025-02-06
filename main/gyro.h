@@ -1,5 +1,6 @@
 #pragma once
 #include <Wire.h>
+#include "button.h"
 // green light on gyro towards back
 
 // divide all these values by 17000 to get the amount in g force
@@ -35,6 +36,8 @@
 
 class Gyro {
 private:
+    Button *button;
+    
     const int MPU = 0x68; // MPU6050 I2C address
 
     unsigned long lastUpdateTime = 0;
@@ -51,10 +54,11 @@ private:
     float temp;
 
     float correctedAcc = 0.0; // disregarding idle gravity
+    float prevMeasuredAccZ = 0.0; // previous corrected acceleration, used to filter out bumps
 
 public:
-    float prevMeasuredAccZ = 0.0; // previous corrected acceleration, used to filter out bumps
+    float prevSmoothedAcc = 0.0;
     float smoothedAcc = 0.0; // smoothed out acceleration for dealing with bumps and irregularities, signed
-    Gyro();
+    Gyro(Button *button);
     void update();
 };

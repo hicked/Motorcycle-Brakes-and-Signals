@@ -5,7 +5,9 @@
 // SDA = A4
 // SCL = A5
 
-Gyro::Gyro() {
+Gyro::Gyro(Button *button) {
+    this->button = button;
+
     Wire.begin();
     Wire.beginTransmission(MPU);
     Wire.write(0x6B);  
@@ -52,6 +54,7 @@ Gyro::Gyro() {
             Serial.println(CALIBRATION_SAMPLE_SIZE);
             failedAttempts++;
             if (failedAttempts > CALIBRATION_SAMPLE_SIZE) {
+                this->button->mode = BRAKE_MODE_STATIC;
                 break;
             }
             continue;
@@ -74,6 +77,9 @@ Gyro::Gyro() {
 
 
 void Gyro::update() {
+    this->prevMeasuredAccZ = this->measuredAccZ;
+    this->prevSmoothedAcc = this->smoothedAcc;
+
     Wire.beginTransmission(MPU);
     Wire.write(0x3B);  
     Wire.endTransmission(false);
@@ -94,9 +100,9 @@ void Gyro::update() {
         return;
     }
     
-    if (FILTER_DELTA) {
-        float delta = this->measuredAccZ - this->prevMeasuredAccZ
-        if (sqrt(delta*delta) > BUMP_THRESHOLD && lastUpdateTime - millis() < BUMP_OVERRIDE) {
+    if (FILTER_DELTA) { // this should always be true, otherwise brake might be too sensitive, but it's here anyways
+        float delta = this->measuredAccZ - this->prevMeasuredAccZ;
+        if (sqrt(delta*delta) > BUMP_THRESHOLD && lastUpdateTime - millis() < BUMP_OVERRIDE) { // override if bump has been detected for too long
             this->measuredAccZ = this->prevMeasuredAccZ; // disregard the bump, use the previous value instead
         }
         else {
@@ -104,12 +110,12 @@ void Gyro::update() {
         }
     }
 
-    // Calculate the corrected acceleration
-    float accX = this->measuredAccX / this->idleAcc
+    // Calculate the corrected acceleration (in gs)
+    float accX = this->measuredAccX / this->idleAcc;
     float accY = this->measuredAccY / this->idleAcc;
     float accZ = this->measuredAccZ / this->idleAcc;
 
-    float theta = atan2(accY, accZ);  // Angle relative to ground
+    float theta = atan2(accY, accZ);  // Angle relative to ground (3d)
 
     // Compute gravity effect correction for hills and lean
     float correction = this->idleAcc * sin(theta);
@@ -122,8 +128,6 @@ void Gyro::update() {
     else {
         this->smoothedAcc = this->correctedAcc;
     }
-
-    this->prevMeasuredAccZ = this->measuredAccZ;
 
     // Serial.print("Acc: ");
     // Serial.println(this->smoothedAcc);

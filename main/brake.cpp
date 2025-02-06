@@ -20,7 +20,7 @@ void Brake::update() {
     }
 
     // Initialization of braking detected
-    else if (gyro->smoothedAcc < -MIN_GYRO_BREAKING && gyro->prevAcc >= -MIN_GYRO_BREAKING && millis() - this->timeSinceLastIniBraking > TIME_BETWEEN_INI_BRAKE) {
+    else if (gyro->smoothedAcc < -MIN_GYRO_BREAKING && gyro->prevSmoothedAcc >= -MIN_GYRO_BREAKING && millis() - this->timeSinceLastIniBraking > TIME_BETWEEN_INI_BRAKE) {
         timeSinceLastIniBraking = millis();
         flashCount = INITIALIZE_BRAKING_FLASH_LENGTH;
     }
