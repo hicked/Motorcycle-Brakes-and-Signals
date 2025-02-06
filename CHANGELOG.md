@@ -10,7 +10,7 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
-## [v.2.1.0] - 2024-02-06
+## [v.2.0.1] - 2024-02-06
 **Author:** Antoine
 - Fixed bug where calibration acceleration wouldnt be properly calibrate
 - Fixed bug where it would infinitely calibrate when it can't read from mpu
