@@ -22,7 +22,7 @@
 // side note, there is a bug where it gets in an infinite loop if multiple overrides stack. For this reason there is a minimum time between overrides
 #define FILTER_DELTA true
 #define BUMP_THRESHOLD 1000 // if the acceleration delta (changes) by this much within a tick, its probably a bump
-#define BUMP_OVERRIDE 1000 // Will overide the bump if it happens for this long
+#define BUMP_OVERRIDE 250 // Will overide the bump if it happens for this long
 
 // Secondly, the program takes a sample size of gyro values
 // It will take the average of AVG_SAMPLE_SIZE data points, and calculate the average

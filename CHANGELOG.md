@@ -10,12 +10,20 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
+## [v.2.1.1] - 2024-02-08
+**Author:** Antoine
+Improved bump detection
+  - If bump is detected, uses raw y acceleration as value. This wont be acurate if on a hill, but is better than no info at all. **Might change this later**
+> Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
+
 ## [v.2.0.1] - 2024-02-06
 **Author:** Antoine
 - Fixed bug where calibration acceleration wouldnt be properly calibrate
 - Fixed bug where it would infinitely calibrate when it can't read from mpu
 changed headers for more realistic acc/braking
 - If it fails to read MPU (gyro) during calibration, it will change the mode to static
+- Improved bump detection
+  - If bump is detected, uses raw y acceleration as value. This wont be acurate if on a hill, but is better than no info at all. **Might change this later**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
 ## [v.2.0.0] - 2024-01-29

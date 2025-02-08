@@ -73,13 +73,11 @@ Gyro::Gyro(Button *button) {
     } 
     
     this->lastUpdateTime = millis(); // Initialize the last update time
+    this->prevMeasuredAccZ = this->measuredAccZ;
 }
 
 
 void Gyro::update() {
-    this->prevMeasuredAccZ = this->measuredAccZ;
-    this->prevSmoothedAcc = this->smoothedAcc;
-
     Wire.beginTransmission(MPU);
     Wire.write(0x3B);  
     Wire.endTransmission(false);
@@ -99,27 +97,38 @@ void Gyro::update() {
         Serial.println("Failed to read from MPU");
         return;
     }
+
+    // Serial.print("MEASURED: ");
+    // Serial.println(this->measuredAccZ);
+    // Serial.print("PREV: ");
+    // Serial.println(this->prevMeasuredAccZ);
+    // Serial.print("DELTA: ");
+    
     
     if (FILTER_DELTA) { // this should always be true, otherwise brake might be too sensitive, but it's here anyways
-        float delta = this->measuredAccZ - this->prevMeasuredAccZ;
-        if (sqrt(delta*delta) > BUMP_THRESHOLD && lastUpdateTime - millis() < BUMP_OVERRIDE) { // override if bump has been detected for too long
-            this->measuredAccZ = this->prevMeasuredAccZ; // disregard the bump, use the previous value instead
+        float delta = sqrt(this->measuredAccZ*this->measuredAccZ) - sqrt(this->prevMeasuredAccZ*this->prevMeasuredAccZ);
+        if (sqrt(delta*delta) > BUMP_THRESHOLD && millis() - lastUpdateTime < BUMP_OVERRIDE) { // override if bump has been detected for too long
+            //Serial.println("BUMP DETECTED.");
+            this->correctedAcc = this->measuredAccY;
+            
         }
         else {
+            // Calculate the corrected acceleration (in gs)
+            float accX = this->measuredAccX / this->idleAcc;
+            float accY = this->measuredAccY / this->idleAcc;
+            float accZ = this->measuredAccZ / this->idleAcc;
+
+            float theta = atan2(accY, accZ);  // Angle relative to ground (3d)
+
+            // Compute gravity effect correction for hills and lean
+            float correction = this->idleAcc * sin(theta);
+            this->correctedAcc = this->measuredAccY - correction;
+            
             lastUpdateTime = millis();
+            this->prevMeasuredAccZ = this->measuredAccZ;
+            this->prevSmoothedAcc = this->smoothedAcc;
         }
     }
-
-    // Calculate the corrected acceleration (in gs)
-    float accX = this->measuredAccX / this->idleAcc;
-    float accY = this->measuredAccY / this->idleAcc;
-    float accZ = this->measuredAccZ / this->idleAcc;
-
-    float theta = atan2(accY, accZ);  // Angle relative to ground (3d)
-
-    // Compute gravity effect correction for hills and lean
-    float correction = this->idleAcc * sin(theta);
-    this->correctedAcc = this->measuredAccY - correction;
 
 
     if (FILTER_SMOOTHING) {
@@ -129,8 +138,8 @@ void Gyro::update() {
         this->smoothedAcc = this->correctedAcc;
     }
 
-    // Serial.print("Acc: ");
-    // Serial.println(this->smoothedAcc);
+    Serial.print("Acc: ");
+    Serial.println(this->smoothedAcc);
 
     // Serial.print("Temperature: ");
     // Serial.println(temp/340.0 + 36.53);
