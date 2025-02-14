@@ -10,9 +10,24 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
+## [v.2.1.3] - 2024-02-14
+**Author:** Antoine
+- Forgot to edit average Y acceleration based on looking at the total average magnitude
+- Adjusted `HILL_SAMPLE_SIZE` header for hills, now updates every couple seconds, might be adjusted later
+- Note that these solutions do not take into account lean, which could pose to be a problem later. Yet to be determined (I can only test with a car for now)
+- **YET TO BE TESTED IN VEHICLE**
+> Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
+
+## [v.2.1.2] - 2024-02-10
+**Author:** Antoine
+- Bumps are now no longer a factor, only look at the y acceleration.
+- For hills, take average of multiple samples, that way the bumps are mostly disregarded
+- Larger sample size or `HILL_SAMPLE_SIZE` the more accurate the acceleration is, but the less often it updates for hills
+> Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
+
 ## [v.2.1.1] - 2024-02-08
 **Author:** Antoine
-Improved bump detection
+- Improved bump detection
   - If bump is detected, uses raw y acceleration as value. This wont be acurate if on a hill, but is better than no info at all. **Might change this later**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 

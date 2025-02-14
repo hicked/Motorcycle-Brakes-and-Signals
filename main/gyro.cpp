@@ -103,34 +103,57 @@ void Gyro::update() {
     // Serial.print("PREV: ");
     // Serial.println(this->prevMeasuredAccZ);
     // Serial.print("DELTA: ");
-    
-    
-    if (FILTER_DELTA) { // this should always be true, otherwise brake might be too sensitive, but it's here anyways
-        float delta = sqrt(this->measuredAccZ*this->measuredAccZ) - sqrt(this->prevMeasuredAccZ*this->prevMeasuredAccZ);
-        if (sqrt(delta*delta) > BUMP_THRESHOLD && millis() - lastUpdateTime < BUMP_OVERRIDE) { // override if bump has been detected for too long
-            //Serial.println("BUMP DETECTED.");
-            this->correctedAcc = this->measuredAccY;
-            
-        }
-        else {
-            // Calculate the corrected acceleration (in gs)
-            float accX = this->measuredAccX / this->idleAcc;
-            float accY = this->measuredAccY / this->idleAcc;
-            float accZ = this->measuredAccZ / this->idleAcc;
 
-            float theta = atan2(accY, accZ);  // Angle relative to ground (3d)
+    this->sumHillSamplesX += this->measuredAccX;
+    this->sumHillSamplesY += this->measuredAccY;
+    this->sumHillSamplesZ += this->measuredAccZ;
+    this->numHillSamples++;
 
-            // Compute gravity effect correction for hills and lean
-            float correction = this->idleAcc * sin(theta);
-            this->correctedAcc = this->measuredAccY - correction;
-            
-            lastUpdateTime = millis();
-            this->prevMeasuredAccZ = this->measuredAccZ;
-            this->prevSmoothedAcc = this->smoothedAcc;
-        }
+    if (this->numHillSamples >= HILL_SAMPLE_SIZE) {
+        // Calculate the average acceleration
+        float averageMeasuredAccX = this->sumHillSamplesX / this->numHillSamples;
+        float averageMeasuredAccY = this->sumHillSamplesY / this->numHillSamples;
+        float averageMeasuredAccZ = this->sumHillSamplesZ / this->numHillSamples;
+
+        // What we can do now is compair the average magnitude over this time period with the idleAcc
+        float avgMagnitude = sqrt(averageMeasuredAccX*averageMeasuredAccX + 
+                                  averageMeasuredAccY*averageMeasuredAccY + 
+                                  averageMeasuredAccZ*averageMeasuredAccZ);
+        // Serial.print("Avg Magnitude: ");
+        // Serial.println(avgMagnitude);
+
+        // Whatever the delta is, should be from Y acceleration (braking/accelerating)
+        float deltaAccY = avgMagnitude - this->idleAcc;
+        // Serial.print("Delta Acc: ");
+        // Serial.println(deltaAccY);
+        
+        // Subtract the delta from the average measured acceleration to get the corrected acceleration for angles
+        averageMeasuredAccY -= deltaAccY;
+
+        float accX = averageMeasuredAccX / this->idleAcc;
+        float accY = averageMeasuredAccY / this->idleAcc;
+        float accZ = averageMeasuredAccZ / this->idleAcc;
+
+        float theta = atan2(accY, accZ);  // Angle relative to ground (3d)
+
+        // Calculate the correction factor
+        this->correction = this->idleAcc * sin(theta);
+
+        this->sumHillSamplesX = 0;
+        this->sumHillSamplesY = 0;
+        this->sumHillSamplesZ = 0;
+        this->numHillSamples = 0;
+
+        // Serial.print("Theta: ");
+        // Serial.println(theta * 180.0 / PI);
+        // Serial.println("Correction: ");
+        // Serial.println(this->correction);
     }
 
+    this->correctedAcc = this->measuredAccY - correction;
+    
 
+    this->prevSmoothedAcc = this->smoothedAcc;
     if (FILTER_SMOOTHING) {
         this->smoothedAcc = this->smoothedAcc * (1 - SMOOTHING_FACTOR) + this->correctedAcc * SMOOTHING_FACTOR;
     }
