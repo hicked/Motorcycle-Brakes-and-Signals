@@ -139,7 +139,7 @@ void Gyro::update() {
         float theta = atan2(accY, accZ);  // Angle relative to ground (3d)
 
         // Calculate the correction factor
-        hillOffset = this->idleAcc * sin(theta);
+        float hillOffset = this->idleAcc * sin(theta);
         this->correction = this->correction * (1 - HILL_SMOOTHING_FACTOR) + hillOffset * HILL_SMOOTHING_FACTOR;
 
         this->sumHillSamplesX = 0;
@@ -156,7 +156,7 @@ void Gyro::update() {
     // // If its above 1g, lets just ignore it, assuming there is a acceleration from initiating lean,
     // // or from bumps. But if its below 1g, lets smoothly change the correction factor (assuming the difference is due to a hill)
     // if (combinedAccXZ < this->idleAcc) {
-    //     hillOffset = (this->idleAcc - combinedAccXZ) * (this->measuredAccY > 0 ? 1 : -1);
+    //     float hillOffset = (this->idleAcc - combinedAccXZ) * (this->measuredAccY > 0 ? 1 : -1);
         
     //     float theta = acos(combinedAccXZ / this->idleAcc);
 
