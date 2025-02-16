@@ -98,6 +98,8 @@ void Gyro::update() {
         return;
     }
 
+
+    // Method 1
     // Serial.print("MEASURED: ");
     // Serial.println(this->measuredAccZ);
     // Serial.print("PREV: ");
@@ -150,8 +152,26 @@ void Gyro::update() {
         // Serial.println(this->correction);
     }
 
-    this->correctedAcc = this->measuredAccY - correction;
+
+    // Method 2
+    // under normal circumstances (no incline) this value should be equal to 1g
+    combinedAccXZ = abs(this->measuredAccZ) + abs(this->measuredAccX);
+
+    // If its above 1g, lets just ignore it, assuming there is a acceleration from initiating lean,
+    // or from bumps. But if its below 1g, lets smoothly change the correction factor (assuming the difference is due to a hill)
+    if (combinedAccXZ < this->idleAcc) {
+        hillOffset = (this->idleAcc - combinedAccXZ) * (this->measuredAccY > 0 ? 1 : -1);
+        
+        float theta = acos(combinedAccXZ / this->idleAcc);
+        // Serial.print("Theta: ");
+        // Serial.println(theta * 180.0 / PI);
+
+        this->correction = this->correction * (1 - HILL_SMOOTHING_FACTOR) + hillOffset * HILL_SMOOTHING_FACTOR;
+    }
+
     
+    // apply the correction factor to the acceleration. This works for both methods
+    this->correctedAcc = this->measuredAccY - this->correction;
 
     this->prevSmoothedAcc = this->smoothedAcc;
     if (FILTER_SMOOTHING) {

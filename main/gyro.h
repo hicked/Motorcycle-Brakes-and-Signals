@@ -34,6 +34,7 @@
 // Finaly, it smoothed the previous and new values together instead of just setting them
 #define FILTER_SMOOTHING true
 #define SMOOTHING_FACTOR 0.3 // lower value is more smoothing, less vibrations, but less reactive/fast
+#define HILL_SMOOTHING_FACTOR 0.1 // lower value is more smoothing, less vibrations, but less reactive/fast
 
 class Gyro {
 private:
