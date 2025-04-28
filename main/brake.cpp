@@ -15,12 +15,13 @@ void Brake::update() {
     this->brakeWireInput = !digitalRead(BRAKE_PIN);
 
     // Emergency braking detected
-    if (gyro->smoothedAcc < -MAX_GYRO_BREAKING && flashCount == 0) {
+    if (gyro->smoothedAndCorrectedYAcc < -MAX_GYRO_BREAKING && flashCount == 0) {
         flashCount++; // continuously adds one or flashes forever
     }
 
     // Initialization of braking detected
-    else if (gyro->smoothedAcc < -MIN_GYRO_BREAKING && gyro->prevSmoothedAcc >= -MIN_GYRO_BREAKING && millis() - this->timeSinceLastIniBraking > TIME_BETWEEN_INI_BRAKE) {
+    else if (gyro->smoothedAndCorrectedYAcc < -MIN_GYRO_BREAKING && gyro->prevSmoothedAndCorrectedYAcc >= -MIN_GYRO_BREAKING && 
+            millis() - this->timeSinceLastIniBraking > TIME_BETWEEN_INI_BRAKE) {
         timeSinceLastIniBraking = millis();
         flashCount = INITIALIZE_BRAKING_FLASH_LENGTH;
     }
@@ -59,7 +60,7 @@ void Brake::update() {
 
 void Brake::dynamicBrakeMode() {
     this->setSolid(BACKLIGHT_COLOUR); // Reset to background
-    if (gyro->smoothedAcc < -MIN_GYRO_BREAKING) { // breaking
+    if (gyro->smoothedAndCorrectedYAcc < -MIN_GYRO_BREAKING) { // breaking
         // Flash the LEDs in the center
         this->flashCenterLEDs();
 
@@ -85,7 +86,7 @@ void Brake::dynamicBrakeMode() {
         }
     } 
     
-    else if (gyro->smoothedAcc > MIN_GYRO_ACCELERATING && SHOW_ACC) { // Accelerating
+    else if (gyro->smoothedAndCorrectedYAcc > MIN_GYRO_ACCELERATING && SHOW_ACC) { // Accelerating
         for (int i = 0; i < this->numActiveLEDs; i++) {
             int index1 = middleIndex + i;
             int index2 = middleIndex - i - 1;
@@ -98,7 +99,7 @@ void Brake::dynamicBrakeMode() {
 
 void Brake::staticBrakeMode(){
     this->setSolid(BACKLIGHT_COLOUR); // Reset to background
-    if (gyro->smoothedAcc < -MIN_GYRO_BREAKING || this->brakeWireInput) {
+    if (gyro->smoothedAndCorrectedYAcc < -MIN_GYRO_BREAKING || this->brakeWireInput) {
         this->flashCenterLEDs();
         for (int i = 0; i < numLEDs/2 - CENTER_FLASH_WIDTH/2; i++) {
             int index1 = middleIndex + CENTER_FLASH_WIDTH/2 + i;
@@ -108,7 +109,7 @@ void Brake::staticBrakeMode(){
             this->LEDStrip[index2] = ACTIVE_BRAKE_COLOUR;
         }        
     }
-    else if (gyro->smoothedAcc > MIN_GYRO_ACCELERATING && SHOW_ACC) { // accelerating
+    else if (gyro->smoothedAndCorrectedYAcc > MIN_GYRO_ACCELERATING && SHOW_ACC) { // accelerating
         this->setSolid(ACTIVE_ACC_COLOUR); // Green brake color
     }
 }

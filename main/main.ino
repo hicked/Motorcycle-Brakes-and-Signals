@@ -52,19 +52,19 @@ void loop() {
     // Serial.println(gyro->smoothedAcc);
 
     // Update the number of active LEDs and brightness of the brake lights
-    if (gyro->smoothedAcc > 0) { // accelerating
-        brake->numActiveLEDs = constrain(map(gyro->smoothedAcc, MIN_GYRO_ACCELERATING, MAX_GYRO_ACCELERATING, 0, NUM_LEDS/2), 0, NUM_LEDS/2);
-        brake->active_brightness = constrain(map(gyro->smoothedAcc, MIN_GYRO_ACCELERATING, MAX_GYRO_ACCELERATING, MIN_BRAKE_BRIGHTNESS, MAX_BRAKE_BRIGHTNESS), 0, MAX_BRAKE_BRIGHTNESS);
+    if (gyro->smoothedAndCorrectedYAcc > 0) { // accelerating
+        brake->numActiveLEDs = constrain(map(gyro->smoothedAndCorrectedYAcc, MIN_GYRO_ACCELERATING, MAX_GYRO_ACCELERATING, 0, NUM_LEDS/2), 0, NUM_LEDS/2);
+        brake->active_brightness = constrain(map(gyro->smoothedAndCorrectedYAcc, MIN_GYRO_ACCELERATING, MAX_GYRO_ACCELERATING, MIN_BRAKE_BRIGHTNESS, MAX_BRAKE_BRIGHTNESS), 0, MAX_BRAKE_BRIGHTNESS);
     } else { // breaking
-        brake->numActiveLEDs = constrain(map(abs(gyro->smoothedAcc), MIN_GYRO_BREAKING, MAX_GYRO_BREAKING, 0,  (NUM_LEDS - CENTER_FLASH_WIDTH)/2), 0, (NUM_LEDS - CENTER_FLASH_WIDTH)/2);
-        brake->active_brightness = constrain(map(-(gyro->smoothedAcc), MIN_GYRO_BREAKING, MAX_GYRO_BREAKING, MIN_BRAKE_BRIGHTNESS, MAX_BRAKE_BRIGHTNESS), 0, MAX_BRAKE_BRIGHTNESS);
+        brake->numActiveLEDs = constrain(map(abs(gyro->smoothedAndCorrectedYAcc), MIN_GYRO_BREAKING, MAX_GYRO_BREAKING, 0,  (NUM_LEDS - CENTER_FLASH_WIDTH)/2), 0, (NUM_LEDS - CENTER_FLASH_WIDTH)/2);
+        brake->active_brightness = constrain(map(-(gyro->smoothedAndCorrectedYAcc), MIN_GYRO_BREAKING, MAX_GYRO_BREAKING, MIN_BRAKE_BRIGHTNESS, MAX_BRAKE_BRIGHTNESS), 0, MAX_BRAKE_BRIGHTNESS);
     }
 
-    if (abs(gyro->smoothedAcc - EXPECTED_ACC_MAGNITUDE) < 1000 && brake->brakeWireInput) { // at rest, brake activated
+    if (abs(gyro->smoothedAndCorrectedYAcc - EXPECTED_ACC_MAGNITUDE) < 1000 && brake->brakeWireInput) { // at rest, brake activated
         brake->numActiveLEDs = NUM_LEDS/2-1;
     }
 
-    if (SHOW_CHROMA && gyro->smoothedAcc > MAX_GYRO_ACCELERATING) {
+    if (SHOW_CHROMA && gyro->smoothedAndCorrectedYAcc > MAX_GYRO_ACCELERATING) {
         CRGB colours[] = {CRGB::Red, CRGB::Green, CRGB::Blue};
          // (list of colours, number of colours, speed, blend amount, start from center, reverse direction)
         brake->chromaMode();
