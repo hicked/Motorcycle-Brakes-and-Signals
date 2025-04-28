@@ -10,7 +10,7 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
-## [v.2.2.3] - 2024-02-14
+## [v.3.0.0] - 2025-04-28
 **Author:** Antoine
 - Reworked entire gyroscope logic.
 - Now calculates pitch and roll
