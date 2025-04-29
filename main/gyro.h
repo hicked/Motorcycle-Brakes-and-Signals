@@ -7,10 +7,10 @@
 #define APPLY_MOUNTING_OFFSET false
 
 // divide all these values by 17000 to get the amount in g force
-#define MIN_GYRO_BREAKING 500 // Buffer area where gyro wont do anything
+#define MIN_GYRO_BREAKING 1000 // Buffer area where gyro wont do anything
 #define MAX_GYRO_BREAKING 5000 // Max value of gyro when braking. anything more will be emergency braking
 
-#define MIN_GYRO_ACCELERATING 500 // buffer area where gyro wont do anything
+#define MIN_GYRO_ACCELERATING 1000 // buffer area where gyro wont do anything
 #define MAX_GYRO_ACCELERATING 5000 // maximum value of gyro when accelerating
 
 #define FORCE_EXPECTED_MAGNITUDE true  // Whether to override bad calibration values
@@ -18,12 +18,12 @@
 #define CALIBRATION_SAMPLE_SIZE 500 // sample size for calibration phase
 #define CALIBRATION_ACC_DELTA 2000 // ensures that the acc found during calibration is within this of EXPECTED_ACC_MAGNITUDE
 
-#define HILL_SAMPLE_SIZE 25 // higher value is more accurate, but slower. Used to detect hills
-#define HILL_CORRECTION_SMOOTHING_FACTOR 1 // lower value is more smoothing, less reactive/fast, 1 means no smothing
-// Not sure why you would want smoothing for detecting hills since it's an average anyways, but it's there if you need it
+// WARNING!!! HILL_SAMPLE_SIZE IS VERY MEMORY INTENSIVE. STICK TO 25-150 OR MEMORY WILL FRAGMENT
+#define HILL_SAMPLE_SIZE 100 // higher value is more accurate, but slower. Used to detect hills
+#define HILL_CORRECTION_SMOOTHING_FACTOR 0.2 // lower value is more smoothing, less reactive/fast, 1 means no smoothing
 
 // Finaly, it smoothes the previous and new values together instead of just setting them
-#define SMOOTHING_FACTOR 0.4 // lower value is more smoothing, less vibrations, but less reactive/fast. 1 means no smoothing
+#define SMOOTHING_FACTOR 0.2 // lower value is more smoothing, less vibrations, but less reactive/fast. 1 means no smoothing
 
 class Gyro {
     private:
@@ -31,41 +31,41 @@ class Gyro {
         Button* button;
         
         // Calibration data
-        double idleAcc = 0.0f;
-        float mountingOffsetX = 0.0f;
-        float mountingOffsetY = 0.0f;
-        float mountingOffsetZ = 0.0f;
+        int idleAcc = 0;
+        int mountingOffsetX = 0;
+        int mountingOffsetY = 0;
+        int mountingOffsetZ = 0;
 
         // Sensor readings
-        float measuredAccX = 0.0f;
-        float measuredAccY = 0.0f;
-        float measuredAccZ = 0.0f;
+        int measuredAccX = 0;
+        int measuredAccY = 0;
+        int measuredAccZ = 0;
 
         // Hill detection
-        float xSamples[HILL_SAMPLE_SIZE];
-        float ySamples[HILL_SAMPLE_SIZE];
-        float zSamples[HILL_SAMPLE_SIZE];
-        float sumHillSamplesX = 0.0f;
-        float sumHillSamplesY = 0.0f;
-        float sumHillSamplesZ = 0.0f;
+        long xSamplesSum = 0;
+        long ySamplesSum = 0;
+        int zSamples[HILL_SAMPLE_SIZE];
+        int sumHillSamplesX = 0;
+        int sumHillSamplesY = 0;
+        int sumHillSamplesZ = 0;
         int numHillSamples = 0;
-        float correction = 0.0f;
+        int correction = 0;
 
         // Filtered outputs
-        float correctedAcc = 0.0f;
+        int correctedYonAcceleration = 0;
 
         // Timing
         unsigned long lastUpdateTime = 0;
 
         bool readRawAccel();
-        float median(float samples[], int size);
+        int median(int samples[], int size);
         void calculateHillCorrection();
 
     public:
         float pitch = 0.0f;
         float roll = 0.0f;
-        float smoothedAndCorrectedYAcc = 0.0f;
-        float prevSmoothedAndCorrectedYAcc = 0.0f;
+        int smoothedAndCorrectedYAcc = 0;
+        int prevSmoothedAndCorrectedYAcc = 0;
 
         Gyro(Button* button);
         void update();

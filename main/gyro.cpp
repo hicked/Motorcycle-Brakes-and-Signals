@@ -36,13 +36,12 @@ Gyro::Gyro(Button* button) {
     }
 
     if (readRawAccel()) {
-      float magnitude = sqrt(
+      int magnitude = sqrt(
         this->measuredAccX * this->measuredAccX + this->measuredAccY * this->measuredAccY + this->measuredAccZ * this->measuredAccZ);
       n++;
-      sumX += this->measuredAccX;
-      sumY += this->measuredAccY;
-      sumZ += this->measuredAccZ;
-      sum += magnitude;
+      sumX += (int)this->measuredAccX;
+      sumY += (int)this->measuredAccY;
+      sumZ += (int)this->measuredAccZ;
 
     } else {
       Serial.print("Failed Attempt to read from MPU: ");
@@ -51,17 +50,19 @@ Gyro::Gyro(Button* button) {
       Serial.println(CALIBRATION_SAMPLE_SIZE);
       failedAttempts++;
       if (failedAttempts > CALIBRATION_SAMPLE_SIZE) {
+        button->mode = BRAKE_MODE_STATIC;  // Set to static mode if calibration fails
+        Serial.println("Calibration failed, setting to static mode.");
         break;
       }
       continue;
     }
     delay(5);
   }
-
-  this->idleAcc = (float)(sum / n);
-  this->mountingOffsetX = (float)(sumX / n);
-  this->mountingOffsetY = (float)(sumY / n);
-  this->mountingOffsetZ = (float)(sumZ / n) - EXPECTED_ACC_MAGNITUDE;
+  sum = sqrt(sumX*sumX + sumY*sumY + sumZ*sumZ);
+  this->idleAcc = (sum / n);
+  this->mountingOffsetX = (sumX / n);
+  this->mountingOffsetY = (sumY / n);
+  this->mountingOffsetZ = (sumZ / n) - EXPECTED_ACC_MAGNITUDE;
 
   if (abs(this->idleAcc - EXPECTED_ACC_MAGNITUDE) > CALIBRATION_ACC_DELTA) {
     this->idleAcc = EXPECTED_ACC_MAGNITUDE;
@@ -80,8 +81,8 @@ Gyro::Gyro(Button* button) {
   Serial.print(this->mountingOffsetY);
   Serial.print(", ");
   Serial.println(this->mountingOffsetZ);
+  Serial.println("==================================");
 }
-
 
 
 void Gyro::update() {
@@ -90,8 +91,8 @@ void Gyro::update() {
     return;
   }
 
-  this->xSamples[this->numHillSamples] = this->measuredAccX;
-  this->ySamples[this->numHillSamples] = this->measuredAccY;
+  this->xSamplesSum += this->measuredAccX;
+  this->ySamplesSum += this->measuredAccY;
   this->zSamples[this->numHillSamples] = this->measuredAccZ;
   this->numHillSamples++;
 
@@ -100,31 +101,32 @@ void Gyro::update() {
   }
 
   // Apply correction and smoothing
-  this->correctedAcc = (this->measuredAccY-this->mountingOffsetY) - this->correction;
+  this->correctedYonAcceleration = (this->measuredAccY-this->mountingOffsetY) - this->correction;
+  this->smoothedAndCorrectedYAcc = this->prevSmoothedAndCorrectedYAcc * (1 - SMOOTHING_FACTOR)
+                      + this->correctedYonAcceleration * SMOOTHING_FACTOR;
   this->prevSmoothedAndCorrectedYAcc = this->smoothedAndCorrectedYAcc;
-  this->smoothedAndCorrectedYAcc = this->smoothedAndCorrectedYAcc * (1 - SMOOTHING_FACTOR)
-                      + this->correctedAcc * SMOOTHING_FACTOR;
   
-  if (numHillSamples == 0) {
-    Serial.println("Smoothed Y Acceleration (braking/accelerating): ");
+  // if (numHillSamples%50 == 0) {
+    // Serial.println("Smoothed Y Acceleration (braking/accelerating): ");
     Serial.println(this->smoothedAndCorrectedYAcc);
-    Serial.println("==================================");
-  }
+    // Serial.println(this->smoothedAndCorrectedYAcc);
+    // Serial.println("==================================");
+  // }
 }
 
 
 void Gyro::calculateHillCorrection() {
-  float avgX = median(xSamples, HILL_SAMPLE_SIZE);
-  float avgY = median(ySamples, HILL_SAMPLE_SIZE);
-  float avgZ = median(zSamples, HILL_SAMPLE_SIZE);
+  int avgX = xSamplesSum/HILL_SAMPLE_SIZE; 
+  int avgY = ySamplesSum/HILL_SAMPLE_SIZE;
+  int avgZ = median(zSamples, HILL_SAMPLE_SIZE);
 
-  // Debug output
-  Serial.println("Raw Acceleration (X,Y,Z): ");
-  Serial.print(avgX);
-  Serial.print(", ");
-  Serial.print(avgY);
-  Serial.print(", ");
-  Serial.println(avgZ);
+  // // Debug output
+  // Serial.println("Raw Acceleration (X,Y,Z): ");
+  // Serial.print(avgX);
+  // Serial.print(", ");
+  // Serial.print(avgY);
+  // Serial.print(", ");
+  // Serial.println(avgZ);
 
   float mountingOffsetCorrectedX = avgX - this->mountingOffsetX;
   float mountingOffsetCorrectedY = avgY - this->mountingOffsetY;
@@ -156,22 +158,24 @@ void Gyro::calculateHillCorrection() {
                      + hillOffset * HILL_CORRECTION_SMOOTHING_FACTOR;
 
   this->numHillSamples = 0;  // Reset the sample count for the next batch of readings
+  this->xSamplesSum = 0;
+  this->ySamplesSum = 0;
 
-  Serial.println("\nCorrected Acceleration (Mounting/Hill/Lean/Gravity) (X,Y,Z): ");
-  Serial.print(mountingOffsetCorrectedX);
-  Serial.print(", ");
-  Serial.print(mountingOffsetCorrectedY-this->correction);
-  Serial.print(", ");
-  Serial.println(mountingOffsetCorrectedZ-EXPECTED_ACC_MAGNITUDE);
+  // Serial.println("\nCorrected Acceleration (Mounting/Hill/Lean/Gravity) (X,Y,Z): ");
+  // Serial.print(mountingOffsetCorrectedX);
+  // Serial.print(", ");
+  // Serial.print(mountingOffsetCorrectedY-this->correction);
+  // Serial.print(", ");
+  // Serial.println(mountingOffsetCorrectedZ-EXPECTED_ACC_MAGNITUDE);
 
   // Angles
-  Serial.print("\nPitch: ");
-  Serial.print(pitch * 180.0 / PI);
-  Serial.println("°");
-  Serial.print("Roll: ");
-  Serial.print(roll * 180.0 / PI);
-  Serial.println("°");
-  Serial.println();
+  // Serial.print("\nPitch: ");
+  // Serial.print(pitch * 180.0 / PI);
+  // Serial.println("°");
+  // Serial.print("Roll: ");
+  // Serial.print(roll * 180.0 / PI);
+  // Serial.println("°");
+  // Serial.println();
 }
 
 
@@ -194,9 +198,9 @@ bool Gyro::readRawAccel() {
 }
 
 // Median function implementation
-float Gyro::median(float samples[], int size) {
+int Gyro::median(int samples[], int size) {
   // Copy array for sorting
-  float temp[size];
+  int temp[size];
   for (int i = 0; i < size; i++) {
     temp[i] = samples[i];
   }
@@ -204,7 +208,7 @@ float Gyro::median(float samples[], int size) {
   for (int i = 0; i < size - 1; i++) {
     for (int j = 0; j < size - i - 1; j++) {
       if (temp[j] > temp[j + 1]) {
-        float swap = temp[j];
+        int swap = temp[j];
         temp[j] = temp[j + 1];
         temp[j + 1] = swap;
       }
