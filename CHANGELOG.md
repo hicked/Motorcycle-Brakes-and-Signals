@@ -17,7 +17,6 @@ Date is in YYYY/MM/DD format.
 - Should update for new inclines every 25 loops
 - Can be changed in `HILL_SAMPLE_SIZE`
 - Also takes into account mounting errors, although **RESULTS WILL BE LESS ACCURATE**
-- **YET TO BE TESTED IN VEHICLE**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
 ## [v.2.1.3] - 2024-02-14
