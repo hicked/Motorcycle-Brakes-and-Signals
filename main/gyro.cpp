@@ -4,7 +4,7 @@
 
 // SDA = A4
 // SCL = A5
-// BUTONNNNNNNNNNNNNNNNNNNNNN
+
 Gyro::Gyro(Button* button) {
   Wire.begin();
   Wire.beginTransmission(MPU6050_ADDR);
@@ -108,7 +108,7 @@ void Gyro::update() {
   
   // if (numHillSamples%50 == 0) {
     // Serial.println("Smoothed Y Acceleration (braking/accelerating): ");
-    Serial.println(this->smoothedAndCorrectedYAcc);
+    // Serial.println(this->smoothedAndCorrectedYAcc);
     // Serial.println(this->smoothedAndCorrectedYAcc);
     // Serial.println("==================================");
   // }

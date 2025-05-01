@@ -84,6 +84,17 @@ void Brake::dynamicBrakeMode() {
                 this->LEDStrip[index2] = ACTIVE_BRAKE_COLOUR;
             }
         }
+        int numSpaces = 33-this->numActiveLEDs;
+        for(int i=0; i<numSpaces; i++){
+            Serial.print(" ");
+        }
+        for(int i=0; i<this->numActiveLEDs; i++){
+            Serial.print("=");
+        }
+        for(int i=0; i<numSpaces; i++){
+            Serial.print(" ");
+        }
+        Serial.println("");
     } 
     
     else if (gyro->smoothedAndCorrectedYAcc > MIN_GYRO_ACCELERATING && SHOW_ACC) { // Accelerating
