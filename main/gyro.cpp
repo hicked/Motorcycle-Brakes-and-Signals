@@ -60,9 +60,11 @@ Gyro::Gyro(Button* button) {
   }
   sum = sqrt(sumX*sumX + sumY*sumY + sumZ*sumZ);
   this->idleAcc = (sum / n);
-  this->mountingOffsetX = (sumX / n);
-  this->mountingOffsetY = (sumY / n);
-  this->mountingOffsetZ = (sumZ / n) - EXPECTED_ACC_MAGNITUDE;
+  if (APPLY_MOUNTING_OFFSET) {
+    this->mountingOffsetX = (sumX / n);
+    this->mountingOffsetY = (sumY / n);
+    this->mountingOffsetZ = (sumZ / n) - EXPECTED_ACC_MAGNITUDE;
+  }
 
   if (abs(this->idleAcc - EXPECTED_ACC_MAGNITUDE) > CALIBRATION_ACC_DELTA) {
     this->idleAcc = EXPECTED_ACC_MAGNITUDE;
@@ -87,99 +89,50 @@ Gyro::Gyro(Button* button) {
 
 void Gyro::update() {
   if (!readRawAccel()) {
-    Serial.println("MPU read failed in update(), or value out of bound");
+    Serial.println("MPU read failed");
     return;
   }
 
-  this->xSamplesSum += this->measuredAccX;
-  this->ySamplesSum += this->measuredAccY;
-  this->zSamples[this->numHillSamples] = this->measuredAccZ;
-  this->numHillSamples++;
+  // Print raw values for debugging
+  // Serial.print("Raw Y/Z: ");
+  // Serial.print(measuredAccY);
+  // Serial.print(", ");
+  // Serial.println(measuredAccZ);
 
-  if (this->numHillSamples >= HILL_SAMPLE_SIZE) {
-    calculateHillCorrection();
+  // Calculate magnitude of Y and Z (gravity-compensated)
+  long yzAccMagnitude = sqrt((long)measuredAccY * (long)measuredAccY + 
+                            (long)measuredAccZ * (long)measuredAccZ);
+
+  // Compute deviation from expected gravity
+  long inputAcceleration = (yzAccMagnitude - EXPECTED_ACC_MAGNITUDE) * (measuredAccY < 0 ? -1 : 1);
+
+  // Store deviation (positive/negative indicates acceleration direction)
+  sampleAccelerationMagnitudes[numHillSamples] = inputAcceleration;
+  numHillSamples++;
+
+  if (numHillSamples >= HILL_SAMPLE_SIZE) {
+    long medDeviation = median(sampleAccelerationMagnitudes, HILL_SAMPLE_SIZE);
+    
+    // Apply smoothing to the deviation (not the raw magnitude)
+    smoothedAndCorrectedYAcc = smoothedAndCorrectedYAcc*(1 - SMOOTHING_FACTOR) + 
+                               medDeviation * SMOOTHING_FACTOR;
+    
+    // Reset for next batch of samples
+    numHillSamples = 0;
   }
 
-  // Apply correction and smoothing
-  this->correctedYonAcceleration = (this->measuredAccY-this->mountingOffsetY) - this->correction;
-  this->smoothedAndCorrectedYAcc = this->prevSmoothedAndCorrectedYAcc * (1 - SMOOTHING_FACTOR)
-                      + this->correctedYonAcceleration * SMOOTHING_FACTOR;
-  this->prevSmoothedAndCorrectedYAcc = this->smoothedAndCorrectedYAcc;
-  
-  // if (numHillSamples%50 == 0) {
-    // Serial.println("Smoothed Y Acceleration (braking/accelerating): ");
-    // Serial.println(this->smoothedAndCorrectedYAcc);
-    // Serial.println(this->smoothedAndCorrectedYAcc);
-    // Serial.println("==================================");
-  // }
+  // Serial.print("Smoothed Deviation: ");
+  Serial.println(smoothedAndCorrectedYAcc);
 }
 
 
 void Gyro::calculateHillCorrection() {
-  int avgX = xSamplesSum/HILL_SAMPLE_SIZE; 
-  int avgY = ySamplesSum/HILL_SAMPLE_SIZE;
-  int avgZ = median(zSamples, HILL_SAMPLE_SIZE);
 
-  // // Debug output
-  // Serial.println("Raw Acceleration (X,Y,Z): ");
-  // Serial.print(avgX);
-  // Serial.print(", ");
-  // Serial.print(avgY);
-  // Serial.print(", ");
-  // Serial.println(avgZ);
-
-  float mountingOffsetCorrectedX = avgX - this->mountingOffsetX;
-  float mountingOffsetCorrectedY = avgY - this->mountingOffsetY;
-  float mountingOffsetCorrectedZ = avgZ - this->mountingOffsetZ;
-  float magnitude = sqrt(mountingOffsetCorrectedX * mountingOffsetCorrectedX
-                         + mountingOffsetCorrectedY * mountingOffsetCorrectedY
-                         + mountingOffsetCorrectedZ * mountingOffsetCorrectedZ);
-
-  float normX = mountingOffsetCorrectedX / magnitude;
-  float normY = mountingOffsetCorrectedY / magnitude;
-  float normZ = mountingOffsetCorrectedZ / magnitude;
-
-  this->pitch = atan2(normY, normZ);
-  
-  float sqrtArg = normY * normY + normZ * normZ;
-  this->roll = atan2(-normX, sqrt(sqrtArg));
-
-
-  // Calculate the forward gravity component (hill offset)
-  // This represents how much gravity is acting in the forward/backward direction
-  float gravityForward = sin(pitch) * cos(roll);
-
-  // Calculate the correction needed to compensate for the hill
-  // idleAcc is the expected gravity magnitude (typically ~16384 for ±2g range)
-  float hillOffset = this->idleAcc * gravityForward;
-
-  // Apply smoothing to the correction factor
-  this->correction = this->correction * (1 - HILL_CORRECTION_SMOOTHING_FACTOR)
-                     + hillOffset * HILL_CORRECTION_SMOOTHING_FACTOR;
-
-  this->numHillSamples = 0;  // Reset the sample count for the next batch of readings
-  this->xSamplesSum = 0;
-  this->ySamplesSum = 0;
-
-  // Serial.println("\nCorrected Acceleration (Mounting/Hill/Lean/Gravity) (X,Y,Z): ");
-  // Serial.print(mountingOffsetCorrectedX);
-  // Serial.print(", ");
-  // Serial.print(mountingOffsetCorrectedY-this->correction);
-  // Serial.print(", ");
-  // Serial.println(mountingOffsetCorrectedZ-EXPECTED_ACC_MAGNITUDE);
-
-  // Angles
-  // Serial.print("\nPitch: ");
-  // Serial.print(pitch * 180.0 / PI);
-  // Serial.println("°");
-  // Serial.print("Roll: ");
-  // Serial.print(roll * 180.0 / PI);
-  // Serial.println("°");
-  // Serial.println();
 }
 
 
 bool Gyro::readRawAccel() {
+  Wire.endTransmission();
   Wire.beginTransmission(MPU6050_ADDR);
   Wire.write(0x3B);  // ACCEL_XOUT_H register
   if (Wire.endTransmission(false) != 0) {
@@ -198,7 +151,7 @@ bool Gyro::readRawAccel() {
 }
 
 // Median function implementation
-int Gyro::median(int samples[], int size) {
+int Gyro::median(long samples[], int size) {
   // Copy array for sorting
   int temp[size];
   for (int i = 0; i < size; i++) {

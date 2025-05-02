@@ -52,6 +52,12 @@ private:
 
     int numLEDs; // number of LEDs, from header in main.ino
     int middleIndex; // middle index of the LED strip (+1 since even)  xxxoxx
+
+
+
+    unsigned long cac = 0;
+
+
     
     void dynamicBrakeMode(); // show brake lights based on how hard you brake
     void staticBrakeMode();
