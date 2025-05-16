@@ -22,9 +22,8 @@ Gyro::Gyro(Button* button) {
   
   if (FORCE_EXPECTED_MAGNITUDE) {
     this->idleAcc = EXPECTED_ACC_MAGNITUDE;
-    break;
+    return;
   }
-
 
   unsigned long lastTime = millis();
   unsigned int failedAttempts = 0;
@@ -190,7 +189,7 @@ void Gyro::initializeMPU() {
 }
 
 // Median function implementation
-int Gyro::median(long samples[], int size) {
+int Gyro::median(int samples[], int size) {
   // Copy array for sorting
   int temp[size];
   for (int i = 0; i < size; i++) {

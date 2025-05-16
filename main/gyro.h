@@ -47,7 +47,7 @@ class Gyro {
         int prevSmoothedAccY = 0;
         int prevSmoothedAccZ = 0;
 
-        int sampleAccelerationMagnitudes[HILL_SAMPLE_SIZE];
+        int sampleAccelerationMagnitudes[MEDIAN_SAMPLE_SIZE];
         int numMedianSample = 0;
 
         // Filtered outputs
@@ -58,7 +58,7 @@ class Gyro {
 
         bool readRawAccel();
         void initializeMPU();
-        int median(long samples[], int size);
+        int median(int samples[], int size);
 
     public:
         int smoothedAndCorrectedYAcc = 0;
