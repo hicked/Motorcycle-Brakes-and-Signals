@@ -11,7 +11,8 @@ Gyro::Gyro(Button* button) {
   Wire.write(0x6B);
   Wire.write(0);
   Wire.endTransmission(true);
-
+  this->button = button;
+  
   // This sets the initial gyro value to ensure that it is calibrated. Sample size in this case is 500
   // It will calculate the average gyro magniture over this time, if the value is over x, assume the calibration failed
   // Like if it was done while accelerating, so set a conservative amount EXPECTED_ACC_MAGNITUDE
@@ -19,10 +20,15 @@ Gyro::Gyro(Button* button) {
   float sumX = 0.0;
   float sumY = 0.0;
   float sumZ = 0.0;
-  this->button = button;
 
   int n = 0;
-  delay(1000);
+  
+  if (FORCE_EXPECTED_MAGNITUDE) {
+    this->idleAcc = EXPECTED_ACC_MAGNITUDE;
+    break;
+  }
+
+
   unsigned long lastTime = millis();
   unsigned int failedAttempts = 0;
   while (n < CALIBRATION_SAMPLE_SIZE) {
@@ -37,7 +43,10 @@ Gyro::Gyro(Button* button) {
 
     if (readRawAccel()) {
       int magnitude = sqrt(
-        this->measuredAccX * this->measuredAccX + this->measuredAccY * this->measuredAccY + this->measuredAccZ * this->measuredAccZ);
+        this->measuredAccX * this->measuredAccX + 
+        this->measuredAccY * this->measuredAccY + 
+        this->measuredAccZ * this->measuredAccZ);
+
       n++;
       sumX += (int)this->measuredAccX;
       sumY += (int)this->measuredAccY;
@@ -52,6 +61,7 @@ Gyro::Gyro(Button* button) {
       if (failedAttempts > CALIBRATION_SAMPLE_SIZE) {
         button->mode = BRAKE_MODE_STATIC;  // Set to static mode if calibration fails
         Serial.println("Calibration failed, setting to static mode.");
+        this->idleAcc = EXPECTED_ACC_MAGNITUDE;
         break;
       }
       continue;
@@ -60,29 +70,24 @@ Gyro::Gyro(Button* button) {
   }
   sum = sqrt(sumX*sumX + sumY*sumY + sumZ*sumZ);
   this->idleAcc = (sum / n);
-  if (APPLY_MOUNTING_OFFSET) {
-    this->mountingOffsetX = (sumX / n);
-    this->mountingOffsetY = (sumY / n);
-    this->mountingOffsetZ = (sumZ / n) - EXPECTED_ACC_MAGNITUDE;
-  }
 
   if (abs(this->idleAcc - EXPECTED_ACC_MAGNITUDE) > CALIBRATION_ACC_DELTA) {
     this->idleAcc = EXPECTED_ACC_MAGNITUDE;
     Serial.print("OVERRIDING IDLE ACCELERATION TO: ");
     Serial.println(this->idleAcc);
   }
+  this->idleAcc = EXPECTED_ACC_MAGNITUDE;
 
   this->lastUpdateTime = millis();  // Initialize the last update time
-  this->numHillSamples = 0;         // Reset the hill sample count
 
   Serial.println("\nIdle magnitude:");
   Serial.println(this->idleAcc);
   Serial.println("\nMounting Offsets (X,Y,Z): ");
-  Serial.print(this->mountingOffsetX);
+  Serial.print(sumX/n);
   Serial.print(", ");
-  Serial.print(this->mountingOffsetY);
+  Serial.print(sumY/n);
   Serial.print(", ");
-  Serial.println(this->mountingOffsetZ);
+  Serial.println(sumZ/n);
   Serial.println("==================================");
 }
 
@@ -95,39 +100,51 @@ void Gyro::update() {
 
   // Print raw values for debugging
   // Serial.print("Raw Y/Z: ");
+  // Serial.print(measuredAccX);
+  // Serial.print(", ");
   // Serial.print(measuredAccY);
   // Serial.print(", ");
   // Serial.println(measuredAccZ);
 
+  
+  this->smoothedAccX = this->prevSmoothedAccX*(1 - X_SMOOTHING) + 
+                        this->measuredAccX * (X_SMOOTHING);
+
+  this->smoothedAccY = this->prevSmoothedAccY*(1 - Y_SMOOTHING) + 
+                        this->measuredAccY * (Y_SMOOTHING);
+
+  this->smoothedAccZ = this->prevSmoothedAccZ*(1 - Z_SMOOTHING) + 
+                        this->measuredAccZ * (Z_SMOOTHING);
+
   // Calculate magnitude of Y and Z (gravity-compensated)
-  long yzAccMagnitude = sqrt((long)measuredAccY * (long)measuredAccY + 
-                            (long)measuredAccZ * (long)measuredAccZ);
+  long accMagnitude = sqrt(
+                            (long) this->smoothedAccX * (long) this->smoothedAccX + 
+                            (long) this->smoothedAccY * (long) this->smoothedAccY +
+                            (long) this->measuredAccZ * (long) this->measuredAccZ);
 
   // Compute deviation from expected gravity
-  long inputAcceleration = (yzAccMagnitude - EXPECTED_ACC_MAGNITUDE) * (measuredAccY < 0 ? -1 : 1);
+  long inputAcceleration = (accMagnitude - EXPECTED_ACC_MAGNITUDE) * (this->smoothedAccY < 0 ? 1 : -1);
 
   // Store deviation (positive/negative indicates acceleration direction)
-  sampleAccelerationMagnitudes[numHillSamples] = inputAcceleration;
-  numHillSamples++;
+  sampleAccelerationMagnitudes[numMedianSample] = inputAcceleration;
+  numMedianSample++;
 
-  if (numHillSamples >= HILL_SAMPLE_SIZE) {
-    long medDeviation = median(sampleAccelerationMagnitudes, HILL_SAMPLE_SIZE);
+  if (numMedianSample >= MEDIAN_SAMPLE_SIZE) {
+    long medAcc = median(sampleAccelerationMagnitudes, MEDIAN_SAMPLE_SIZE);
     
     // Apply smoothing to the deviation (not the raw magnitude)
-    smoothedAndCorrectedYAcc = smoothedAndCorrectedYAcc*(1 - SMOOTHING_FACTOR) + 
-                               medDeviation * SMOOTHING_FACTOR;
-    
-    // Reset for next batch of samples
-    numHillSamples = 0;
+    smoothedAndCorrectedYAcc = smoothedAndCorrectedYAcc*(1 - GLOBAL_SMOOTHING) + 
+                               medAcc * GLOBAL_SMOOTHING;
+
+    this->prevSmoothedAndCorrectedYAcc = smoothedAndCorrectedYAcc;
+    numMedianSample = 0;
+
+    Serial.println(smoothedAndCorrectedYAcc);
   }
-
-  // Serial.print("Smoothed Deviation: ");
-  Serial.println(smoothedAndCorrectedYAcc);
-}
-
-
-void Gyro::calculateHillCorrection() {
-
+  
+  this->prevSmoothedAccX = this->smoothedAccX;
+  this->prevSmoothedAccY = this->smoothedAccY;
+  this->prevSmoothedAccZ = this->smoothedAccZ;
 }
 
 

@@ -10,7 +10,16 @@ Date is in YYYY/MM/DD format.
 
 **C**: Refactoring / Tiny Feature / Patch
 
-## [v.3.0.0] - 2025-04-28
+## [v.0.7.0-beta] - 2025-05-15
+**Author:** Antoine
+- Reworked gyroscope once again...
+- Much simpler setup now, just take the total magnitude, and each component can have it's own smoothing
+(i.e. Y will have much more smoothing to deal with bumps)
+- Inverted the sign of acceleration
+- Changed release names in `CHANGELOG.md`
+> Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
+
+## [v.0.6.0-beta] - 2025-04-28
 **Author:** Antoine
 - Reworked entire gyroscope logic.
 - Now calculates pitch and roll
@@ -19,7 +28,7 @@ Date is in YYYY/MM/DD format.
 - Also takes into account mounting errors, although **RESULTS WILL BE LESS ACCURATE**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
-## [v.2.1.3] - 2024-02-14
+## [v.0.5.5-beta] - 2024-02-14
 **Author:** Antoine
 - Forgot to edit average Y acceleration based on looking at the total average magnitude
 - Adjusted `HILL_SAMPLE_SIZE` header for hills, now updates every couple seconds, might be adjusted later
@@ -27,20 +36,20 @@ Date is in YYYY/MM/DD format.
 - **YET TO BE TESTED IN VEHICLE**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
-## [v.2.1.2] - 2024-02-10
+## [v.0.5.4-beta] - 2024-02-10
 **Author:** Antoine
 - Bumps are now no longer a factor, only look at the y acceleration.
 - For hills, take average of multiple samples, that way the bumps are mostly disregarded
 - Larger sample size or `HILL_SAMPLE_SIZE` the more accurate the acceleration is, but the less often it updates for hills
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
-## [v.2.1.1] - 2024-02-08
+## [v.0.5.3-beta] - 2024-02-08
 **Author:** Antoine
 - Improved bump detection
   - If bump is detected, uses raw y acceleration as value. This wont be acurate if on a hill, but is better than no info at all. **Might change this later**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
-## [v.2.0.1] - 2024-02-06
+## [v.0.5.2-beta] - 2024-02-06
 **Author:** Antoine
 - Fixed bug where calibration acceleration wouldnt be properly calibrate
 - Fixed bug where it would infinitely calibrate when it can't read from mpu
@@ -50,14 +59,13 @@ changed headers for more realistic acc/braking
   - If bump is detected, uses raw y acceleration as value. This wont be acurate if on a hill, but is better than no info at all. **Might change this later**
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
-## [v.2.0.0] - 2024-01-29
+## [v.0.5.1-beta] - 2024-01-29
 **Author:** Antoine
 -   Gyro filtering was deemed to be ineffective, resorting to Y-Axis acceleration with vector algebra to determine when lean/hills occur (and disregard them).
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes
 
-## [v.1.0.0] - 2024-01-22
+## [v.0.5.0-beta] - 2024-01-22
 **Author:** Antoine
--   v1.0.0, First release
 -   Refactoring
 -   Gyro filter effectiveness to be determined
 > Note, signal and brake inputs are set to `INPUT_PULLUP` for now to ignore noise. These may have to be swapped to `INPUT`. Signals input are also inverted for debugging purposes

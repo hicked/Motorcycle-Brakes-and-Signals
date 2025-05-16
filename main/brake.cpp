@@ -95,10 +95,10 @@ void Brake::dynamicBrakeMode() {
             this->LEDStrip[index2] = ACTIVE_ACC_COLOUR;
         }
     }
-    // if (millis() > this->cac+250) {
+    // if (millis() > this->cac+50) {
     //     int numSpaces = 33-this->numActiveLEDs-CENTER_FLASH_WIDTH;
     //     for (int i=0; i<numSpaces; i++){
-    //         Serial.print("-");
+    //         Serial.print(" ");
     //     }
     //     for (int i=0; i<this->numActiveLEDs; i++){
     //         Serial.print("=");
@@ -110,7 +110,7 @@ void Brake::dynamicBrakeMode() {
     //         Serial.print("=");
     //     }
     //     for (int i=0; i<numSpaces; i++){
-    //         Serial.print("-");
+    //         Serial.print(" ");
     //     }
     //     Serial.println("");
     //     cac = millis();
