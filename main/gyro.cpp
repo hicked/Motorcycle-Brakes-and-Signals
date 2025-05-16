@@ -144,48 +144,50 @@ void Gyro::update() {
 }
 
 
-bool Gyro::readRawAccel() {
-  static uint8_t errorCount = 0;
-  
-  initializeMPU();
-  if (Wire.endTransmission(false) != 0) {
-    errorCount++;
-    if (errorCount > 5) {
-      // Attempt to recover the I2C bus
-      Wire.end();
-      delay(100);
-      Wire.begin();
-      initializeMPU();  // You'll need to implement this
-      errorCount = 0;
-    }
-    return false;
-  }
-  
-  if (Wire.requestFrom(MPU6050_ADDR, 6, true) != 6) {
-    errorCount++;
-    return false;
-  }
-  
-  // Reset error count on successful read
-  errorCount = 0;
-  
-  measuredAccX = Wire.read() << 8 | Wire.read();
-  measuredAccY = Wire.read() << 8 | Wire.read();
-  measuredAccZ = Wire.read() << 8 | Wire.read();
-  
-  if (abs(this->measuredAccX) > 32768 || abs(this->measuredAccY) > 32768 || abs(this->measuredAccZ) > 32768) {
-    return false;  // Invalid sensor values
-  }
-  
-  return true;
-}
-
 void Gyro::initializeMPU() {
   Wire.beginTransmission(MPU6050_ADDR);
-  Wire.write(0x6B);  // PWR_MGMT_1 register
-  Wire.write(0);     // Wake up the MPU-6050
+  if (Wire.endTransmission() != 0) {
+    Serial.println("MPU6050 not detected!");
+    return;
+  }
+
+  Wire.beginTransmission(MPU6050_ADDR);
+  Wire.write(0x6B);  // PWR_MGMT_1
+  Wire.write(0);     // Wake up
   Wire.endTransmission(true);
+
+  // Set accelerometer to ±8g (optional)
+  Wire.beginTransmission(MPU6050_ADDR);
+  Wire.write(0x1C);  // ACCEL_CONFIG
+  Wire.write(0x10);  // ±8g
+  Wire.endTransmission(true);
+
   delay(100);
+}
+
+bool Gyro::readRawAccel() {
+  Wire.beginTransmission(MPU6050_ADDR);
+  Wire.write(0x3B);  // Start at ACCEL_XOUT_H
+  if (Wire.endTransmission(false) != 0) {
+    Serial.println("I2C error");
+    return false;
+  }
+
+  if (Wire.requestFrom(MPU6050_ADDR, 6) != 6) {
+    Serial.println("Data read failed");
+    return false;
+  }
+
+  // Read and convert to signed 16-bit integers
+  int16_t rawX = Wire.read() << 8 | Wire.read();
+  int16_t rawY = Wire.read() << 8 | Wire.read();
+  int16_t rawZ = Wire.read() << 8 | Wire.read();
+
+  measuredAccX = rawX;
+  measuredAccY = rawY;
+  measuredAccZ = rawZ;
+
+  return true;
 }
 
 // Median function implementation

@@ -6,14 +6,14 @@
 #define MPU6050_ADDR 0x68  // MPU6050 I2C address
 
 // divide all these values by 17000 to get the amount in g force
-#define MIN_GYRO_BREAKING 150 // Buffer area where gyro wont do anything
-#define MAX_GYRO_BREAKING 800 // Max value of gyro when braking. anything more will be emergency braking
+#define MIN_GYRO_BREAKING 40 // Buffer area where gyro wont do anything
+#define MAX_GYRO_BREAKING 200 // Max value of gyro when braking. anything more will be emergency braking
 
 #define MIN_GYRO_ACCELERATING 800 // buffer area where gyro wont do anything
 #define MAX_GYRO_ACCELERATING 8000 // maximum value of gyro when accelerating
 
 #define FORCE_EXPECTED_MAGNITUDE true  // Whether to override bad calibration values
-#define EXPECTED_ACC_MAGNITUDE 16400.0 // expected value of acceleration when stationary (gravity only). Defaults to this if calibration fails
+#define EXPECTED_ACC_MAGNITUDE 4115 // expected value of acceleration when stationary (gravity only). Defaults to this if calibration fails
 #define CALIBRATION_SAMPLE_SIZE 250 // sample size for calibration phase
 #define CALIBRATION_ACC_DELTA 2000 // ensures that the acc found during calibration is within this of EXPECTED_ACC_MAGNITUDE
 
@@ -24,7 +24,7 @@
 #define X_SMOOTHING 0.25
 #define Y_SMOOTHING 1
 #define Z_SMOOTHING 0.1 // smoothing for irregularities like bumps
-#define GLOBAL_SMOOTHING 0.3 // lower value is more smoothing, less vibrations, but less reactive/fast. 1 means no smoothing
+#define GLOBAL_SMOOTHING 0.5 // lower value is more smoothing, less vibrations, but less reactive/fast. 1 means no smoothing
 
 class Gyro {
     private:
