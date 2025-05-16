@@ -39,20 +39,16 @@ class Gyro {
         int measuredAccY = 0;
         int measuredAccZ = 0;
 
-        // Hill detection
-        long xSamplesSum = 0;
-        long ySamplesSum = 0;
-        long zSamplesSum = 0;
-        int prevSmoothedAccZ = 0;
+        int smoothedAccX = 0;
+        int smoothedAccY = 0;
         int smoothedAccZ = 0;
-        long sampleAccelerationMagnitudes[HILL_SAMPLE_SIZE];
-        int zSamples[HILL_SAMPLE_SIZE];
-        long accelerationMagnitudeSum = 0;
-        int sumHillSamplesX = 0;
-        int sumHillSamplesY = 0;
-        int sumHillSamplesZ = 0;
-        int numHillSamples = 0;
-        int correction = 0;
+
+        int prevSmoothedAccX = 0;
+        int prevSmoothedAccY = 0;
+        int prevSmoothedAccZ = 0;
+
+        int sampleAccelerationMagnitudes[HILL_SAMPLE_SIZE];
+        int numMedianSample = 0;
 
         // Filtered outputs
         int correctedYAcceleration = 0;
@@ -61,12 +57,10 @@ class Gyro {
         unsigned long lastUpdateTime = 0;
 
         bool readRawAccel();
+        void initializeMPU();
         int median(long samples[], int size);
-        void calculateHillCorrection();
 
     public:
-        float pitch = 0.0f;
-        float roll = 0.0f;
         int smoothedAndCorrectedYAcc = 0;
         int prevSmoothedAndCorrectedYAcc = 0;
 

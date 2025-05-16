@@ -7,10 +7,7 @@
 
 Gyro::Gyro(Button* button) {
   Wire.begin();
-  Wire.beginTransmission(MPU6050_ADDR);
-  Wire.write(0x6B);
-  Wire.write(0);
-  Wire.endTransmission(true);
+  initializeMPU();
   this->button = button;
   
   // This sets the initial gyro value to ensure that it is calibrated. Sample size in this case is 500
@@ -123,23 +120,23 @@ void Gyro::update() {
                             (long) this->measuredAccZ * (long) this->measuredAccZ);
 
   // Compute deviation from expected gravity
-  long inputAcceleration = (accMagnitude - EXPECTED_ACC_MAGNITUDE) * (this->smoothedAccY < 0 ? 1 : -1);
+  int inputAcceleration = (accMagnitude - EXPECTED_ACC_MAGNITUDE) * (this->smoothedAccY < 0 ? 1 : -1);
 
   // Store deviation (positive/negative indicates acceleration direction)
-  sampleAccelerationMagnitudes[numMedianSample] = inputAcceleration;
-  numMedianSample++;
+  this->sampleAccelerationMagnitudes[numMedianSample] = inputAcceleration;
+  this->numMedianSample++;
 
-  if (numMedianSample >= MEDIAN_SAMPLE_SIZE) {
+  if (this->numMedianSample >= MEDIAN_SAMPLE_SIZE) {
     long medAcc = median(sampleAccelerationMagnitudes, MEDIAN_SAMPLE_SIZE);
     
     // Apply smoothing to the deviation (not the raw magnitude)
-    smoothedAndCorrectedYAcc = smoothedAndCorrectedYAcc*(1 - GLOBAL_SMOOTHING) + 
+    this->smoothedAndCorrectedYAcc = this->smoothedAndCorrectedYAcc*(1 - GLOBAL_SMOOTHING) + 
                                medAcc * GLOBAL_SMOOTHING;
 
-    this->prevSmoothedAndCorrectedYAcc = smoothedAndCorrectedYAcc;
-    numMedianSample = 0;
+    this->prevSmoothedAndCorrectedYAcc = this->smoothedAndCorrectedYAcc;
+    this->numMedianSample = 0;
 
-    Serial.println(smoothedAndCorrectedYAcc);
+    Serial.println(this->smoothedAndCorrectedYAcc);
   }
   
   this->prevSmoothedAccX = this->smoothedAccX;
@@ -149,22 +146,47 @@ void Gyro::update() {
 
 
 bool Gyro::readRawAccel() {
-  Wire.endTransmission();
-  Wire.beginTransmission(MPU6050_ADDR);
-  Wire.write(0x3B);  // ACCEL_XOUT_H register
+  static uint8_t errorCount = 0;
+  
+  initializeMPU();
   if (Wire.endTransmission(false) != 0) {
+    errorCount++;
+    if (errorCount > 5) {
+      // Attempt to recover the I2C bus
+      Wire.end();
+      delay(100);
+      Wire.begin();
+      initializeMPU();  // You'll need to implement this
+      errorCount = 0;
+    }
     return false;
   }
+  
   if (Wire.requestFrom(MPU6050_ADDR, 6, true) != 6) {
+    errorCount++;
     return false;
   }
+  
+  // Reset error count on successful read
+  errorCount = 0;
+  
   measuredAccX = Wire.read() << 8 | Wire.read();
   measuredAccY = Wire.read() << 8 | Wire.read();
   measuredAccZ = Wire.read() << 8 | Wire.read();
+  
   if (abs(this->measuredAccX) > 32768 || abs(this->measuredAccY) > 32768 || abs(this->measuredAccZ) > 32768) {
     return false;  // Invalid sensor values
   }
+  
   return true;
+}
+
+void Gyro::initializeMPU() {
+  Wire.beginTransmission(MPU6050_ADDR);
+  Wire.write(0x6B);  // PWR_MGMT_1 register
+  Wire.write(0);     // Wake up the MPU-6050
+  Wire.endTransmission(true);
+  delay(100);
 }
 
 // Median function implementation
