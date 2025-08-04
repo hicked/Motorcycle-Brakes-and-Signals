@@ -6,28 +6,28 @@
 
 #define BRAKE_PIN 11 // Pin for the brake lights
 
-#define BACKLIGHT_COLOUR CRGB(10, 0, 0) // Dim red for the background
+#define BACKLIGHT_COLOUR CRGB(8, 0, 0) // Dim red for the background
 #define ACTIVE_BRAKE_COLOUR CRGB(this->active_brightness, 0, 0) // Bright red for the active brake
 #define ACTIVE_ACC_COLOUR CRGB(0, this->active_brightness, 0) // Green for acceleration
 
 #define FLASHLIGHT_COLOUR CRGB(255, 255, 255) // white
 #define FLASH_COLOUR CRGB(255, 0, 0) // Colour when the entire brake is flashing
-#define CENTER_FLASH_COLOUR CRGB(200, 0, 0) // Colour when the center is flashing
+#define CENTER_FLASH_COLOUR CRGB(255, 0, 0) // Colour when the center is flashing
 
 #define GLOBAL_BRIGHTNESS 255 // 0-255, this might be broken since it gets overriden
-#define MIN_BRAKE_BRIGHTNESS 100 // 0-255 minimum brightness of the brake when braking
-#define MAX_BRAKE_BRIGHTNESS 200 //0-255 maximum brightness of the brake when braking
+#define MIN_BRAKE_BRIGHTNESS 200 // 0-255 minimum brightness of the brake when braking
+#define MAX_BRAKE_BRIGHTNESS 255 //0-255 maximum brightness of the brake when braking
 
 #define CENTER_FLASH_SPEED 50 // flashrate of the center part lower is faster
-#define CENTER_FLASH_WIDTH 4 // Width of the flashing center part of the brake. should be even
+#define CENTER_FLASH_WIDTH 0 // Width of the flashing center part of the brake. should be even
 
 #define FLASH_SPEED 25 // delay between flashes for emergency braking and initialization of brakes
-#define INITIALIZE_BRAKING_FLASH_LENGTH 10 // Number of brake flahses when initializing braking
+#define INITIALIZE_BRAKING_FLASH_LENGTH 3 // Number of brake flahses when initializing braking
 
 #define TIME_BETWEEN_INI_BRAKE 3000 // initialization of braking detection can only happen every x milliseconds
 
-#define SHOW_ACC true // show acceleration (green)
-#define SHOW_CHROMA true // show chroma when accelerating fast (rainbow)
+#define SHOW_ACC false // show acceleration (green)
+#define SHOW_CHROMA false // show chroma when accelerating fast (rainbow)
 
 class Signals;
 
