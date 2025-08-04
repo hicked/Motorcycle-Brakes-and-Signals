@@ -145,9 +145,28 @@ void Gyro::update() {
 
 
 void Gyro::initializeMPU() {
+  debugI2CPins();
+  Wire.begin();
+  
+  // Add I2C scanner for debugging
+  Serial.println("Scanning I2C devices...");
+  bool deviceFound = false;
+  for (byte address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("Found I2C device at address 0x");
+      if (address < 16) Serial.print("0");
+      Serial.println(address, HEX);
+      deviceFound = true;
+    }
+  }
+  if (!deviceFound) {
+    Serial.println("No I2C devices found!");
+  }
+
   Wire.beginTransmission(MPU6050_ADDR);
   if (Wire.endTransmission() != 0) {
-    Serial.println("MPU6050 not detected!");
+    Serial.println("MPU6050 not detected at expected address!");
     return;
   }
 
@@ -163,18 +182,30 @@ void Gyro::initializeMPU() {
   Wire.endTransmission(true);
 
   delay(100);
+  
+  // Test read after initialization
+  Serial.println("Testing initial read...");
+  if (readRawAccel()) {
+    Serial.println("Initial MPU6050 read successful!");
+  } else {
+    Serial.println("Initial MPU6050 read failed!");
+  }
 }
 
 bool Gyro::readRawAccel() {
   Wire.beginTransmission(MPU6050_ADDR);
   Wire.write(0x3B);  // Start at ACCEL_XOUT_H
-  if (Wire.endTransmission(false) != 0) {
-    Serial.println("I2C error");
+  byte error = Wire.endTransmission(false);
+  if (error != 0) {
+    Serial.print("I2C transmission error: ");
+    Serial.println(error);
     return false;
   }
 
-  if (Wire.requestFrom(MPU6050_ADDR, 6) != 6) {
-    Serial.println("Data read failed");
+  byte bytesReceived = Wire.requestFrom(MPU6050_ADDR, 6);
+  if (bytesReceived != 6) {
+    Serial.print("Expected 6 bytes, got: ");
+    Serial.println(bytesReceived);
     return false;
   }
 
@@ -209,4 +240,38 @@ int Gyro::median(int samples[], int size) {
   }
 
   return temp[size / 2];
+}
+
+void Gyro::debugI2CPins() {
+  // Read analog values (0-1023 for 0-5V)
+  int sda_analog = analogRead(A4);
+  int scl_analog = analogRead(A5);
+  
+  // Convert to voltage (assuming 5V reference)
+  float sda_voltage = (sda_analog / 1023.0) * 5.0;
+  float scl_voltage = (scl_analog / 1023.0) * 5.0;
+  
+  // Read digital state
+  pinMode(A4, INPUT);
+  pinMode(A5, INPUT);
+  int sda_digital = digitalRead(A4);
+  int scl_digital = digitalRead(A5);
+  
+  Serial.print("SDA (A4) - Analog: ");
+  Serial.print(sda_analog);
+  Serial.print(" (");
+  Serial.print(sda_voltage);
+  Serial.print("V), Digital: ");
+  Serial.println(sda_digital);
+  
+  Serial.print("SCL (A5) - Analog: ");
+  Serial.print(scl_analog);
+  Serial.print(" (");
+  Serial.print(scl_voltage);
+  Serial.print("V), Digital: ");
+  Serial.println(scl_digital);
+  
+  // Reinitialize I2C after reading pins
+  Wire.begin();
+  delay(1000);
 }

@@ -6,8 +6,8 @@
 #define MPU6050_ADDR 0x68  // MPU6050 I2C address
 
 // divide all these values by 17000 to get the amount in g force
-#define MIN_GYRO_BREAKING 40 // Buffer area where gyro wont do anything
-#define MAX_GYRO_BREAKING 200 // Max value of gyro when braking. anything more will be emergency braking
+#define MIN_GYRO_BREAKING 35 // Buffer area where gyro wont do anything
+#define MAX_GYRO_BREAKING 550 // Max value of gyro when braking. anything more will be emergency braking
 
 #define MIN_GYRO_ACCELERATING 800 // buffer area where gyro wont do anything
 #define MAX_GYRO_ACCELERATING 8000 // maximum value of gyro when accelerating
@@ -21,10 +21,10 @@
 #define MEDIAN_SAMPLE_SIZE 20 // higher value is more accurate, but slower. Used to detect hills
 
 // Finaly, it smoothes the previous and new values together instead of just setting them
-#define X_SMOOTHING 0.25
+#define X_SMOOTHING 0.20
 #define Y_SMOOTHING 1
-#define Z_SMOOTHING 0.1 // smoothing for irregularities like bumps
-#define GLOBAL_SMOOTHING 0.5 // lower value is more smoothing, less vibrations, but less reactive/fast. 1 means no smoothing
+#define Z_SMOOTHING 0.08 // smoothing for irregularities like bumps
+#define GLOBAL_SMOOTHING 0.225 // lower value is more smoothing, less vibrations, but less reactive/fast. 1 means no smoothing
 
 class Gyro {
     private:
@@ -68,4 +68,5 @@ class Gyro {
         void update();
         float getAcceleration();
         float getRawAcceleration();
+        void debugI2CPins();
 };
